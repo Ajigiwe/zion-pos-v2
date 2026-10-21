@@ -144,6 +144,16 @@ class DeployController extends Controller
             $steps[] = 'note: bootstrap/cache carry skipped';
         }
 
+        // compiled blade views must NOT survive the swap: zip entries keep commit
+        // timestamps, so sources can appear OLDER than carried compiled views and
+        // Laravel would keep rendering the previous release's templates
+        $viewsDir = $newDir . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'framework' . DIRECTORY_SEPARATOR . 'views';
+        if (is_dir($viewsDir)) {
+            $this->rmDir($viewsDir);
+            @mkdir($viewsDir, 0755, true);
+            $steps[] = 'cleared compiled views (stale-template hazard)';
+        }
+
         // sanity gate: the stage must be a complete Laravel app root before it may be swapped in
         foreach (['artisan', 'public' . DIRECTORY_SEPARATOR . 'index.php', '.env', 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php'] as $f) {
             if (!is_file($newDir . DIRECTORY_SEPARATOR . $f)) {
