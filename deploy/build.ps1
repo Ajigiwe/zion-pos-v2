@@ -32,11 +32,17 @@ if (-not (Test-Path $PhpPath))      { throw "php.exe not found at $PhpPath (edit
 if (-not (Test-Path $ComposerPhar)) { throw "composer.phar not found at $ComposerPhar (edit -ComposerPhar)" }
 
 # ---------- 1. stage ----------
-if (Test-Path $stageRoot) { Remove-Item $stageRoot -Recurse -Force }
-New-Item -ItemType Directory -Path $stage -Force | Out-Null
+# -SkipComposer keeps the previous stage's vendor/ and re-stages only code (robocopy /MIR purges removed files per code dir)
+if ($SkipComposer) {
+    if (-not (Test-Path "$stage\vendor\autoload.php")) { throw "-SkipComposer but the stage has no vendor/ - run a full build first" }
+    Write-Host '[1/4] re-staging code over existing stage (vendor kept)' -ForegroundColor Yellow
+} else {
+    if (Test-Path $stageRoot) { Remove-Item $stageRoot -Recurse -Force }
+    New-Item -ItemType Directory -Path $stage -Force | Out-Null
+}
 
 foreach ($d in 'app','config','database','resources','routes','public','deploy') {
-    robocopy (Join-Path $src $d) (Join-Path $stage $d) /E /NFL /NDL /NJH /NJS /NP | Out-Null
+    robocopy (Join-Path $src $d) (Join-Path $stage $d) /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
 }
 foreach ($f in 'artisan','composer.json','composer.lock','.env.production.example') {
     Copy-Item (Join-Path $src $f) $stage -Force

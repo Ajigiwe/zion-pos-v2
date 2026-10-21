@@ -31,7 +31,15 @@ class DeployController extends Controller
         abort_unless(auth()->user()->hasRole('superadmin'), 403);
 
         $steps = [];
-        $fail = function (string $msg, array $steps) use ($home) {
+        $fail = function (string $msg, array $steps) use ($home, $base) {
+            // if carried dirs were renamed out of the live tree, put them back
+            foreach (['vendor', 'storage'] as $d) {
+                $carried = $home . DIRECTORY_SEPARATOR . 'zion-pos-new' . DIRECTORY_SEPARATOR . $d;
+                if (!is_dir($base . DIRECTORY_SEPARATOR . $d) && is_dir($carried)) {
+                    @rename($carried, $base . DIRECTORY_SEPARATOR . $d);
+                    $steps[] = 'restored ' . $d . '/ into the live tree';
+                }
+            }
             foreach (['zion-pos-new', 'zion-pos-old', '.deploy-stage'] as $d) {
                 $p = $home . DIRECTORY_SEPARATOR . $d;
                 if (is_dir($p)) { $this->rmDir($p); }
@@ -103,26 +111,31 @@ class DeployController extends Controller
         $steps[] = 'snapshot staged to ' . basename($newDir);
 
         // 5. carry production state over
+        //    .env  : tiny file copy
+        //    vendor/: RENAME (same filesystem -> instant, no 120s execution-time kill)
+        //    storage/: RENAME over the skeleton
         $carryFile = function (string $src, string $dst, array &$steps) {
             if (!is_file($src)) { $steps[] = 'carry: source file missing - ' . basename($src); return false; }
             return @copy($src, $dst);
-        };
-        $carryDir = function (string $src, string $dst, array $skip = []) use (&$steps) {
-            if (!is_dir($src)) { $steps[] = 'carry: source dir missing - ' . basename($src); return false; }
-            return $this->copyDir($src, $dst, $skip);
         };
         if (!$carryFile($base . DIRECTORY_SEPARATOR . '.env', $newDir . DIRECTORY_SEPARATOR . '.env', $steps)) {
             return $fail('Production .env could not be carried into the stage - deploy aborted, live app untouched.', $steps);
         }
         $steps[] = 'carried .env';
-        if (!$carryDir($base . DIRECTORY_SEPARATOR . 'vendor', $newDir . DIRECTORY_SEPARATOR . 'vendor')) {
-            return $fail('vendor/ could not be carried into the stage.', $steps);
+        $newVendor = $newDir . DIRECTORY_SEPARATOR . 'vendor';
+        if (is_dir($newVendor)) { $this->rmDir($newVendor); }
+        if (!@rename($base . DIRECTORY_SEPARATOR . 'vendor', $newVendor)) {
+            return $fail('vendor/ could not be renamed into the stage.', $steps);
         }
-        $steps[] = 'carried vendor/';
-        if (!$carryDir($base . DIRECTORY_SEPARATOR . 'storage', $newDir . DIRECTORY_SEPARATOR . 'storage')) {
-            $steps[] = 'WARNING: storage/ carry failed (deployed skeleton storage is used instead)';
-        } else { $steps[] = 'carried storage/'; }
-        if (!$carryDir($base . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache', $newDir . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache')) {
+        $steps[] = 'carried vendor/ (renamed)';
+        $newStorage = $newDir . DIRECTORY_SEPARATOR . 'storage';
+        if (is_dir($newStorage)) { $this->rmDir($newStorage); }
+        if (!@rename($base . DIRECTORY_SEPARATOR . 'storage', $newStorage)) {
+            $steps[] = 'WARNING: storage/ rename failed (deployed skeleton storage is used instead)';
+        } else {
+            $steps[] = 'carried storage/ (renamed)';
+        }
+        if (!$this->copyDir($base . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache', $newDir . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache', [])) {
             $steps[] = 'note: bootstrap/cache carry skipped';
         }
 
