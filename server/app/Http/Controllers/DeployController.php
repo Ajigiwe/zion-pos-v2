@@ -31,6 +31,10 @@ class DeployController extends Controller
         abort_unless(auth()->user()->hasRole('superadmin'), 403);
 
         $steps = [];
+        $base = base_path();                       // .../zion-pos
+        $home = dirname($base);                    // /home/ziongrou
+        $newDir = $home . DIRECTORY_SEPARATOR . 'zion-pos-new';
+        $oldDir = $home . DIRECTORY_SEPARATOR . 'zion-pos-old';
         $fail = function (string $msg, array $steps) use ($home, $base) {
             // if carried dirs were renamed out of the live tree, put them back
             foreach (['vendor', 'storage'] as $d) {
@@ -54,11 +58,6 @@ class DeployController extends Controller
         } catch (\Throwable) {
             $steps[] = 'note: could not extend the PHP time limit - large repos may hit the request timeout';
         }
-
-        $base = base_path();                       // .../zion-pos
-        $home = dirname($base);                    // /home/ziongrou
-        $newDir = $home . DIRECTORY_SEPARATOR . 'zion-pos-new';
-        $oldDir = $home . DIRECTORY_SEPARATOR . 'zion-pos-old';
 
         // 1. clean previous stage artifacts
         foreach ([$newDir, $oldDir] as $d) {
