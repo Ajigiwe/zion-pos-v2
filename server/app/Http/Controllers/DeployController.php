@@ -105,7 +105,13 @@ class DeployController extends Controller
         $zip->close();
         $entries = glob($staging . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
         if (count($entries) !== 1) { return $fail('Unexpected snapshot layout (got ' . count($entries) . ' root dirs).', $steps); }
-        if (!rename($entries[0], $newDir)) { return $fail('Could not move the snapshot into place.', $steps); }
+        $snapshot = $entries[0];
+        // our repo keeps the Laravel app under server/ - fall back to a flat snapshot root
+        if (is_dir($snapshot . DIRECTORY_SEPARATOR . 'server')
+            && is_file($snapshot . DIRECTORY_SEPARATOR . 'server' . DIRECTORY_SEPARATOR . 'artisan')) {
+            $snapshot = $snapshot . DIRECTORY_SEPARATOR . 'server';
+        }
+        if (!rename($snapshot, $newDir)) { return $fail('Could not move the snapshot into place.', $steps); }
         $this->rmDir($staging);
         $steps[] = 'snapshot staged to ' . basename($newDir);
 
@@ -137,6 +143,14 @@ class DeployController extends Controller
         if (!$this->copyDir($base . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache', $newDir . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache', [])) {
             $steps[] = 'note: bootstrap/cache carry skipped';
         }
+
+        // sanity gate: the stage must be a complete Laravel app root before it may be swapped in
+        foreach (['artisan', 'public' . DIRECTORY_SEPARATOR . 'index.php', '.env', 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php'] as $f) {
+            if (!is_file($newDir . DIRECTORY_SEPARATOR . $f)) {
+                return $fail('Sanity check failed: ' . $f . ' is missing from the staged tree - deploy aborted.', $steps);
+            }
+        }
+        $steps[] = 'sanity check passed (artisan, public/index.php, .env, vendor/autoload.php)';
 
         // 6. fixture the state file INSIDE the new tree so it survives the swap
         $state = ['sha' => $sha, 'deployed_at' => now()->format('Y-m-d H:i:s'), 'by' => auth()->user()->username,
