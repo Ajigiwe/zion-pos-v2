@@ -73,7 +73,7 @@ function Test-FtpLogin {
 }
 
 function Send-Ftp {
-    param($h,$p,$u,$pw,$file,$dry)
+    param($h,$p,$u,$pw,$file,[bool]$ssl=$true,$dry)
     $name = Split-Path $file -Leaf
     $size = (Get-Item $file).Length
     if ($dry) { Write-Host "WHATIF upload: $name ($size bytes)" -ForegroundColor Yellow; return }
@@ -90,15 +90,25 @@ function Send-Ftp {
     $r = [System.Net.FtpWebRequest]::Create("ftp://${h}:${p}/$name")
     $r.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
     $r.Credentials = $cred
-    $r.EnableSsl = $true; $r.UseBinary = $true; $r.UsePassive = $true
+    $r.UseBinary = $true; $r.UsePassive = $true
     $r.KeepAlive = $false; $r.ContentLength = $size
     $r.Timeout = 300000; $r.ReadWriteTimeout = 300000
-    $rs = $r.GetRequestStream()
-    $fs = [System.IO.File]::OpenRead($file)
-    $fs.CopyTo($rs); $fs.Close(); $rs.Close()
-    $resp = $r.GetResponse()
-    Write-Host ("uploaded {0} ({1:N0} bytes, server said {2})" -f $name, $size, $resp.StatusDescription.Trim()) -ForegroundColor Green
-    $resp.Close()
+    if ($ssl) { $r.EnableSsl = $true }
+    try {
+        $rs = $r.GetRequestStream()
+        $fs = [System.IO.File]::OpenRead($file)
+        $fs.CopyTo($rs); $fs.Close(); $rs.Close()
+        $resp = $r.GetResponse()
+        Write-Host ("uploaded {0} ({1:N0} bytes, server said {2}, tls={3})" -f $name, $size, $resp.StatusDescription.Trim(), $ssl) -ForegroundColor Green
+        $resp.Close(); return
+    } catch {
+        if ($ssl) {
+            Write-Host ("TLS data stream failed on {0} ({1}) - falling back to plain FTP" -f $name, $_.Exception.Message) -ForegroundColor Yellow
+            Send-Ftp -h $h -p $p -u $u -pw $pw -file $file -ssl:$false -dry:$dry
+        } else {
+            throw
+        }
+    }
 }
 
 Test-FtpLogin -h $cfg.host -p $cfg.port -u $cfg.user -pw $pass -dry:$WhatIf
