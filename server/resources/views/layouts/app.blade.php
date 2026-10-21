@@ -78,12 +78,6 @@
                     <span class="nav-label">Imports</span>
                 </a>
             @endcan
-            @if(auth()->check() && Gate::allows('pos.view') && Gate::allows('inventory.view'))
-                <a href="{{ route('customers.index') }}" class="nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zm2 1a6 6 0 1 1-12 0 6 6 0 0 1 12 0zM2 21c0-3 4-4 10-4s10 1 10 4v1H2v-1z"/></svg>
-                    <span class="nav-label">Customers</span>
-                </a>
-            @endif
             @can('reports.view')
                 <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>

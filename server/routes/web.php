@@ -112,9 +112,6 @@ Route::middleware('auth')->group(function () {
     // Own account — every signed-in user can change their own password
     Route::put('account/password', [SettingController::class, 'changePassword'])->name('account.password');
 
-    // Customers (placeholder — parity with Flutter "Coming in a later phase")
-    Route::view('customers', 'customers.index')->name('customers.index');
-
     // Users: quick active/inactive toggle from the settings card
     Route::post('users/{user}/toggle', [UserController::class, 'toggle'])->middleware('permission:users.manage')->name('users.toggle');
 
