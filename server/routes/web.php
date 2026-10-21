@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeployController;
 use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryController;
@@ -121,4 +122,8 @@ Route::middleware('auth')->group(function () {
     Route::get('api/snapshot', [\App\Http\Controllers\SyncController::class, 'snapshot'])->name('api.snapshot');
     Route::post('api/sales', [\App\Http\Controllers\SyncController::class, 'storeSale'])->name('api.sales');
     Route::get('api/ping', [\App\Http\Controllers\SyncController::class, 'ping'])->name('api.ping');
+
+    // Developer self-deploy (repository is the source of truth; superadmin only)
+    Route::get('deploy', [DeployController::class, 'index'])->middleware('role:superadmin')->name('deploy.index');
+    Route::post('deploy', [DeployController::class, 'run'])->middleware('role:superadmin')->name('deploy.run');
 });

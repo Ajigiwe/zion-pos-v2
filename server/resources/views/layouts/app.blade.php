@@ -102,6 +102,12 @@
                     <span class="nav-label">Settings</span>
                 </a>
             @endcan
+            @role('superadmin')
+                <a href="{{ route('deploy.index') }}" class="nav-link {{ request()->routeIs('deploy.*') ? 'active' : '' }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v6H4z"/><path d="M8 10v10h8V10"/><path d="M12 4v6"/></svg>
+                    <span class="nav-label">Deploy</span>
+                </a>
+            @endrole
         </nav>
         <div id="sync-indicator" class="sync-footer" title="Online">
             <span id="sync-dot" class="sync-dot sync-online" title="Online"></span>
