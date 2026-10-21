@@ -87,6 +87,7 @@ if ($LASTEXITCODE -ne 0) { throw "tar failed for app zip" }
 
 # webroot pack comes from its template folder in the repo
 $webStage = Join-Path $stageRoot 'webroot'
+if (Test-Path $webStage) { Remove-Item $webStage -Recurse -Force }
 Copy-Item (Join-Path $PSScriptRoot 'webroot-template') $webStage -Recurse
 $zipWeb = Join-Path $OutDir 'zion-pos-webroot.zip'
 if (Test-Path $zipWeb) { Remove-Item $zipWeb -Force }
@@ -104,6 +105,7 @@ foreach ($z in @($zipApp, $zipWeb)) {
     Write-Host ("{0}: {1} entries, {2:N0} bytes, backslash-entries={3}, env-leaks={4}" -f $leaf, $a.Entries.Count, $size, $bs, $envCount) -ForegroundColor Cyan
     if ($bs -gt 0)  { throw "BACKSLASH entries found in $z - build engine bug" }
     if ($envCount -gt 0) { throw "REAL .env would ship inside $z - abort" }
+    if (($a.Entries | Where-Object { $_.FullName -match 'webroot-template|keygen\.php' }).Count -gt 0) { throw "nesting-debug or keygen.php leaked into $z - abort" }
     $a.Dispose()
 }
 $sym = "$stage\vendor\symfony"

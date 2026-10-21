@@ -42,3 +42,4 @@ Thumbs.db
 # legacy Flutter client (own repo, destined for the scrap heap after UAT)
 /client/
 /.freebuff/
+deploy/deploy.local.json*
