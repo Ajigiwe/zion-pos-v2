@@ -1,0 +1,12 @@
+{
+  "name": "Zion POS",
+  "short_name": "Zion POS",
+  "description": "Offline-first point of sale",
+  "start_url": "/pos",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

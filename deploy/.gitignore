@@ -1,0 +1,3 @@
+# cPanel FTP targets are personal — never commit real credentials.
+deploy/deploy.local.json
+*.bak
