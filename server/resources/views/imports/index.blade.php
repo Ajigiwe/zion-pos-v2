@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-<div style="max-width:840px;">
+<div>
     <div class="feature-card p-3 mb-3">
         <div class="fw-bold small mb-2" style="letter-spacing:.5px;color:var(--muted);">IMPORT TYPE</div>
         <div class="d-flex gap-2 flex-wrap" role="group" id="imp-kind-row">
@@ -204,14 +204,14 @@
                 const barcode = `<input class="form-control form-control-sm imp-in" style="min-width:10rem" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
                 const category = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
                 const brand = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
-                const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
-                const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
-                const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
-                const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
+                const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
+                const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
+                const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" style="min-width:4.5rem" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
+                const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
                 const state = r.auto_sku ? '<span class="small text-muted" title="SKU was minted because the sheet left it blank">auto · new</span>' : r.exists ? '<span class="small text-success">exists</span>' : '<span class="small text-danger">new</span>';
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td>${name}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${sell}</td><td>${tax}</td><td>${reorder}</td>`;
             } else {
-                const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
+                const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td colspan="6" class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "unknown SKU — it will be reported as failed"}</td><td>${qty}</td>`;
             }
             row = row + lines;
