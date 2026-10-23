@@ -196,25 +196,26 @@
             const line = escapeHtml(r.line);
             const sku = escapeHtml(r.sku);
             const include = `<input class="form-check-input mt-0" type="checkbox" ${r.include ? 'checked' : ''} name="rows[${i}][include]" form="imp-form" value="1">`;
-            const skuInput = `<input class="form-control form-control-sm imp-in" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
+            const skuInput = `<input class="form-control form-control-sm imp-in" style="min-width:9rem" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
             const lines = `<input type="hidden" name="rows[${i}][line]" form="imp-form" value="${line}">`;
 
             if (kind === 'products') {
-                const name = `<input class="form-control form-control-sm imp-in" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
-                const barcode = `<input class="form-control form-control-sm imp-in" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
-                const category = `<input class="form-control form-control-sm imp-in" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
-                const brand = `<input class="form-control form-control-sm imp-in" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
+                const name = `<input class="form-control form-control-sm imp-in" style="min-width:12rem" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
+                const barcode = `<input class="form-control form-control-sm imp-in" style="min-width:10rem" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
+                const category = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
+                const brand = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
                 const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
                 const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
                 const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
                 const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
+                const state = r.auto_sku ? '<span class="small text-muted" title="SKU was minted because the sheet left it blank">auto · new</span>' : r.exists ? '<span class="small text-success">exists</span>' : '<span class="small text-danger">new</span>';
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td>${name}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${sell}</td><td>${tax}</td><td>${reorder}</td>`;
             } else {
                 const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td colspan="6" class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "unknown SKU — it will be reported as failed"}</td><td>${qty}</td>`;
             }
             row = row + lines;
-            return `<tr class="${r.include ? "" : "opacity-75"}">${row}<td class="text-center small ${r.exists ? "text-success" : "text-danger"}">${r.exists ? "exists" : kind === "products" ? "new" : "?"}</td></tr>`;
+            return `<tr class="${r.include ? "" : "opacity-75"}">${row}<td class="text-center small ${r.auto_sku ? 'text-muted' : r.exists ? "text-success" : "text-danger"}">${r.auto_sku ? 'auto · new' : r.exists ? "exists" : kind === "products" ? "new" : "?"}</td></tr>`;
         }).join('');
 
         // stats bar reuses the existing detail-row look
@@ -232,9 +233,9 @@
                     <thead class="small"><tr>
                         <th style="width:2.5rem;"></th><th class="text-muted" style="width:3.2rem;">Line</th><th style="width:10rem;">SKU</th>
                         ${kind === 'products'
-                            ? '<th>Name</th><th>Barcode</th><th>Category</th><th>Brand</th><th class="text-end" style="width:7rem;">Cost GHS</th><th class="text-end" style="width:7rem;">Price GHS</th><th class="text-end" style="width:5.5rem;">Tax %</th><th class="text-end" style="width:6.5rem;">Reorder</th>'
+                            ? '<th style="width:13rem;">Name</th><th style="width:11rem;">Barcode</th><th style="width:9rem;">Category</th><th style="width:9rem;">Brand</th><th class="text-end" style="width:7rem;">Cost GHS</th><th class="text-end" style="width:7rem;">Price GHS</th><th class="text-end" style="width:5.5rem;">Tax %</th><th class="text-end" style="width:6.5rem;">Reorder</th>'
                             : '<th style="width:22rem;">Product on shelf</th><th class="text-end" style="width:7rem;">Qty</th>'}
-                        <th class="text-end small" style="width:4.5rem;">State</th>
+                        <th class="text-end small" style="width:5.5rem;">State</th>
                     </tr></thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>

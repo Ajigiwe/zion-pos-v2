@@ -170,6 +170,20 @@ class ImportService
     {
         $drafts = [];
 
+        // lazy counter seeded past any existing SKU-###### codes
+        $nextSku = null;
+        $genSku = function () use (&$nextSku) {
+            if ($nextSku === null) {
+                $max = 0;
+                Product::query()->where('sku', 'like', 'SKU-%')->pluck('sku')->each(function ($s) use (&$max) {
+                    if (preg_match('/^SKU-(\d+)$/', (string) $s, $m)) { $max = max($max, (int) $m[1]); }
+                });
+                $nextSku = $max + 1;
+            }
+
+            return 'SKU-' . str_pad((string) $nextSku++, 6, '0', STR_PAD_LEFT);
+        };
+
         foreach ($rows->values() as $i => $row) {
             $line = $i + 2;
             $sku = trim((string) $row->get(0));
@@ -182,13 +196,21 @@ class ImportService
                 'info' => $product
                     ? ($product->name . ' · stock ' . rtrim(rtrim(number_format((float) $product->stock_cached, 2), '0'), '.') . ' · GHS ' . number_format((float) $product->selling_price, 2))
                     : '',
-                'include' => $kind === 'products' ? $sku !== '' : ($sku !== '' && $product !== null),
+                'auto_sku' => false,
             ];
 
             if ($kind === 'products') {
+                $name = trim((string) $row->get(2));
+                if ($sku === '' && $name !== '') {
+                    // operator gave no SKU for a named item - mint one so the row is usable
+                    $sku = $draft['sku'] = $genSku();
+                    $draft['auto_sku'] = true;
+                    $product = null;
+                    $draft['exists'] = false;
+                }
                 $draft += [
                     'barcode' => $this->nullIfBlank($row->get(1)) ?? '',
-                    'name' => trim((string) $row->get(2)),
+                    'name' => $name,
                     'category' => trim((string) $row->get(3)),
                     'brand' => trim((string) $row->get(4)),
                     'cost_price' => max(0, (float) ($row->get(5) ?? 0)),
@@ -197,10 +219,12 @@ class ImportService
                     'reorder_level' => max(0, (float) ($row->get(8) ?? 0)),
                     'quantity' => max(0, (float) ($row->get(9) ?? 0)),
                 ];
+                $draft['include'] = $sku !== '';
             } else {
                 $draft += [
                     'quantity' => (float) ($row->get(1) ?? 0),
                 ];
+                $draft['include'] = $sku !== '' && $product !== null;
             }
 
             $drafts[] = $draft;
@@ -233,8 +257,9 @@ class ImportService
                     $unitsIn += max(0, $stock);
                     $unitsOut += abs(min(0, $stock));
                 }
-                if ($sku === '') {
-                    $errors[] = "Row {$line}: missing SKU";
+                if ($sku === '' && trim((string) $row->get(2)) === '') {
+                    // no SKU AND no name = unusable row (a named item gets an auto SKU)
+                    $errors[] = "Row {$line}: missing SKU and name";
                     $invalid++;
                     continue;
                 }
