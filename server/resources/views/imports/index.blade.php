@@ -136,12 +136,13 @@
         el('imp-preview').innerHTML = '';
         el('imp-errors').classList.add('d-none');
         draft = null;
+        el('imp-start').disabled = true;
     }
     document.getElementById('k-products').addEventListener('change', () => setKind('products', 'add'));
     document.getElementById('k-add').addEventListener('change', () => setKind('stock', 'add'));
     document.getElementById('k-set').addEventListener('change', () => setKind('stock', 'set'));
 
-    file.addEventListener('change', () => { analyze.disabled = !file.files.length; start.disabled = !file.files.length; showFileName(); });
+    file.addEventListener('change', () => { analyze.disabled = !file.files.length; start.disabled = true; showFileName(); });
 
     // The waiting room: every staged row must have at least one include for the apply to make sense
     form.addEventListener('submit', (e) => {
@@ -188,6 +189,7 @@
     function waitingRoom(s) {
         draft = s;
         el('imp-file-name').value = s.file || 'spreadsheet';
+        el('imp-start').disabled = false;
 
         const rowsHtml = s.rows.map((r, i) => {
             let row;
