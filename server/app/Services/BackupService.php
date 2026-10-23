@@ -35,7 +35,7 @@ class BackupService
                 env('DB_DATABASE'),
             ];
             if (filled(env('DB_PASSWORD'))) {
-                array_splice($cmd, 6, 0, ['--password='.env('DB_PASSWORD')]);
+                array_splice($cmd, 3, 0, ['--password='.env('DB_PASSWORD')]);
             }
 
             $result = Process::run($cmd);
@@ -119,7 +119,7 @@ class BackupService
             '-e', 'SOURCE '.$absolute,
         ];
         if (filled(env('DB_PASSWORD'))) {
-            array_splice($cmd, 6, 0, ['--password='.env('DB_PASSWORD')]);
+            array_splice($cmd, 3, 0, ['--password='.env('DB_PASSWORD')]);
         }
 
         $result = Process::run($cmd);
