@@ -206,6 +206,8 @@ Preserved movement types: `OPENING_STOCK, PURCHASE, BULK_IMPORT, SALE, REFUND, E
 
 - **2026-10-23: imports stage-submit UX hole (`e5eb380`)** — the user pressed *Apply Import* before ever pressing *Analyze* (file selected → button was already enabled) → empty stage hit `imports/apply` and Laravel said `The file name/rows field is required`. Hardened: **Apply stays disabled until Analyze renders the waiting room** (and re-disables when the kind changes, since a draft parsed for one kind is invalid for another). The only route to Apply is: file → Analyze → waiting room → Apply.
 
+- **2026-10-23: imports header-based column mapping (`cdb079f`)** — the operator's own sheet (Item Name / Price (GHS) / Qty / SKU / Barcode) uploaded with values shifted into wrong fields because parsing was positional (template order expected). `readSpreadsheet` now normalizes the header row and remaps columns via an alias table (`Item Name`→name, `Price (GHS)`/`Price`→selling_price, `Qty`→quantity, `SKU`/`Code`→sku, `Barcode`→barcode, plus cost/tax/reorder/category/brand variants), rebuilding rows into the canonical 10-column order every downstream path (analyze, drafts, product import, stock import) already expects. Unrecognized headers fall back to the legacy positional order. Verified against a replica of the operator's layout: every field landed correctly, empty-SKU rows auto-unticked in the waiting room.
+
 ## 9. Immediate Next Actions
 1. Composer installed and working (phar at `%LOCALAPPDATA%\Temp\opencode\composer.phar`; add `;C:\xampp\php` to PATH for CLI)
 2. Phase 2: login/session scaffold, sidebar layout, user-management CRUD with role assignment
