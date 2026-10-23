@@ -121,6 +121,54 @@ class ImportService
     }
 
     /**
+     * Waiting-room drafts: normalized per-row payloads for the review grid.
+     * include=false for structurally broken rows (missing SKU, unknown SKU on
+     * stock import) so the operator has to opt them in.
+     */
+    public function draftRows(Collection $rows, string $kind, string $mode): array
+    {
+        $drafts = [];
+
+        foreach ($rows->values() as $i => $row) {
+            $line = $i + 2;
+            $sku = trim((string) $row->get(0));
+            $product = $sku !== '' ? Product::query()->where('sku', $sku)->first() : null;
+
+            $draft = [
+                'line' => (string) $line,
+                'sku' => $sku,
+                'exists' => (bool) $product,
+                'info' => $product
+                    ? ($product->name . ' · stock ' . rtrim(rtrim(number_format((float) $product->stock_cached, 2), '0'), '.') . ' · GHS ' . number_format((float) $product->selling_price, 2))
+                    : '',
+                'include' => $kind === 'products' ? $sku !== '' : ($sku !== '' && $product !== null),
+            ];
+
+            if ($kind === 'products') {
+                $draft += [
+                    'barcode' => $this->nullIfBlank($row->get(1)) ?? '',
+                    'name' => trim((string) $row->get(2)),
+                    'category' => trim((string) $row->get(3)),
+                    'brand' => trim((string) $row->get(4)),
+                    'cost_price' => max(0, (float) ($row->get(5) ?? 0)),
+                    'selling_price' => max(0, (float) ($row->get(6) ?? 0)),
+                    'tax_rate' => (float) ($row->get(7) ?? 0),
+                    'reorder_level' => max(0, (float) ($row->get(8) ?? 0)),
+                    'quantity' => max(0, (float) ($row->get(9) ?? 0)),
+                ];
+            } else {
+                $draft += [
+                    'quantity' => (float) ($row->get(1) ?? 0),
+                ];
+            }
+
+            $drafts[] = $draft;
+        }
+
+        return $drafts;
+    }
+
+    /**
      * Flutter preview/analysis parity: dry-run the spreadsheet and report what
      * WOULD happen, without writing anything.
      */

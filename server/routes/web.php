@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::get('imports', [ImportController::class, 'index'])->middleware('permission:imports.view')->name('imports.index');
     Route::get('imports/template', [ImportController::class, 'template'])->middleware('permission:imports.view')->name('imports.template');
     Route::post('imports/preview', [ImportController::class, 'preview'])->middleware('permission:imports.run')->name('imports.preview');
+    Route::post('imports/apply', [ImportController::class, 'commit'])->middleware('permission:imports.run')->name('imports.apply');
     Route::post('imports/products', [ImportController::class, 'products'])->middleware('permission:imports.run')->name('imports.products');
     Route::post('imports/stock', [ImportController::class, 'stock'])->middleware('permission:imports.run')->name('imports.stock');
 

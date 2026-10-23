@@ -39,9 +39,11 @@
                 Download template CSV
             </a>
         </div>
-        <form method="POST" action="{{ route('imports.products') }}" enctype="multipart/form-data" id="imp-form" class="m-0">
+        <form method="POST" action="{{ route('imports.apply') }}" enctype="multipart/form-data" id="imp-form" class="m-0">
             @csrf
             <input type="hidden" name="mode" id="imp-mode" value="add">
+            <input type="hidden" name="kind" id="imp-kind-value" value="products">
+            <input type="hidden" name="file_name" id="imp-file-name" value="">
             <label class="drop-zone" id="imp-drop">
                 <input type="file" id="imp-file" name="file" accept=".csv,.xlsx,.xls" class="d-none">
                 <span class="dz-icon">
@@ -60,7 +62,7 @@
                 </button>
                 <button type="submit" class="btn btn-sm btn-accent d-inline-flex align-items-center gap-1" id="imp-start" disabled>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="m12 5 7 7-7 7"/></svg>
-                    Start Import
+                    Apply Import
                 </button>
             </div>
         </form>
@@ -120,14 +122,20 @@
     const actionProducts = '{{ route('imports.products') }}';
     const actionStock = '{{ route('imports.stock') }}';
 
+    let draft = null;
+
+    function el(id) { return document.getElementById(id); }
+
     function setKind(k, m) {
         kind = k; mode = m;
-        document.getElementById('imp-mode').value = m;
-        document.getElementById('kind-help').innerHTML = KIND_HELP[k];
-        document.getElementById('template-link').href =
+        el('imp-kind-value').value = k;
+        el('imp-mode').value = m;
+        el('kind-help').innerHTML = KIND_HELP[k];
+        el('template-link').href =
             '{{ route('imports.template') }}' + (k === 'products' ? '?kind=products' : '?kind=stock');
-        document.getElementById('imp-preview').innerHTML = '';
-        document.getElementById('imp-errors').classList.add('d-none');
+        el('imp-preview').innerHTML = '';
+        el('imp-errors').classList.add('d-none');
+        draft = null;
     }
     document.getElementById('k-products').addEventListener('change', () => setKind('products', 'add'));
     document.getElementById('k-add').addEventListener('change', () => setKind('stock', 'add'));
@@ -135,12 +143,17 @@
 
     file.addEventListener('change', () => { analyze.disabled = !file.files.length; start.disabled = !file.files.length; showFileName(); });
 
-    // Belt & braces: never submit without a file; warn on oversized files
+    // The waiting room: every staged row must have at least one include for the apply to make sense
     form.addEventListener('submit', (e) => {
         if (!file.files.length) { e.preventDefault(); flashWarn('Choose a file first.', 'warn'); return; }
         if (file.files[0].size > 5 * 1024 * 1024) {
             e.preventDefault();
             flashWarn('That file is over the 5 MB limit — split it or remove empty rows.', 'warn');
+            return;
+        }
+        if (draft) {
+            const checked = form.querySelectorAll('input[name$="[include]"]:checked').length;
+            if (!checked) { e.preventDefault(); flashWarn('Nothing ticked in the waiting room — pick rows or untick nothing to import at all.', 'warn'); return; }
         }
     });
 
@@ -172,23 +185,72 @@
         return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    function waitingRoom(s) {
+        draft = s;
+        el('imp-file-name').value = s.file || 'spreadsheet';
+
+        const rowsHtml = s.rows.map((r, i) => {
+            let row;
+            const line = escapeHtml(r.line);
+            const sku = escapeHtml(r.sku);
+            const include = `<input class="form-check-input mt-0" type="checkbox" ${r.include ? 'checked' : ''} name="rows[${i}][include]" form="imp-form" value="1">`;
+            const skuInput = `<input class="form-control form-control-sm imp-in" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
+            const lines = `<input type="hidden" name="rows[${i}][line]" form="imp-form" value="${line}">`;
+
+            if (kind === 'products') {
+                const name = `<input class="form-control form-control-sm imp-in" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
+                const barcode = `<input class="form-control form-control-sm imp-in" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
+                const category = `<input class="form-control form-control-sm imp-in" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
+                const brand = `<input class="form-control form-control-sm imp-in" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
+                const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
+                const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
+                const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
+                const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
+                row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td>${name}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${sell}</td><td>${tax}</td><td>${reorder}</td>`;
+            } else {
+                const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
+                row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td colspan="6" class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "unknown SKU — it will be reported as failed"}</td><td>${qty}</td>`;
+            }
+            row = row + lines;
+            return `<tr class="${r.include ? "" : "opacity-75"}">${row}<td class="text-center small ${r.exists ? "text-success" : "text-danger"}">${r.exists ? "exists" : kind === "products" ? "new" : "?"}</td></tr>`;
+        }).join('');
+
+        // stats bar reuses the existing detail-row look
+        el('imp-preview').innerHTML = `
+            <div class="row g-2 small mb-2">
+                <div class="col"><div class="detail-row"><span class="label">Rows</span><span class="value">${s.total}</span></div></div>
+                <div class="col"><div class="detail-row"><span class="label">Valid</span><span class="value">${s.valid}</span></div></div>
+                <div class="col"><div class="detail-row"><span class="label">${kind === 'products' ? 'New' : 'Applied'}</span><span class="value">${s.new}</span></div></div>
+                <div class="col"><div class="detail-row"><span class="label">Updates</span><span class="value">${s.updates}</span></div></div>
+                <div class="col"><div class="detail-row"><span class="label">Units in</span><span class="value">+${s.units_in}</span></div></div>
+            </div>
+            <div class="small text-muted mb-2"><b>Waiting room</b> — nobody has been imported yet. Adjust anything below (quantities, prices, even SKUs), untick rows you want to leave out, then press <b>Apply Import</b>. Unticked rows are ignored; the count above is from the original file.</div>
+            <div class="table-responsive" style="max-height:420px;">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="small"><tr>
+                        <th style="width:2.5rem;"></th><th class="text-muted" style="width:3.2rem;">Line</th><th style="width:10rem;">SKU</th>
+                        ${kind === 'products'
+                            ? '<th>Name</th><th>Barcode</th><th>Category</th><th>Brand</th><th class="text-end" style="width:7rem;">Cost GHS</th><th class="text-end" style="width:7rem;">Price GHS</th><th class="text-end" style="width:5.5rem;">Tax %</th><th class="text-end" style="width:6.5rem;">Reorder</th>'
+                            : '<th style="width:22rem;">Product on shelf</th><th class="text-end" style="width:7rem;">Qty</th>'}
+                        <th class="text-end small" style="width:4.5rem;">State</th>
+                    </tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </div>`;
+    }
+
     analyze.addEventListener('click', async function () {
         if (!file.files.length) return;
         analyze.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         const body = new FormData();
         body.append('file', file.files[0]);
         body.append('kind', kind);
+        body.append('mode', mode);
         try {
             const res = await fetch('{{ route('imports.preview') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body });
             const s = await res.json();
-            document.getElementById('imp-preview').innerHTML = `
-                <div class="row g-2 small">
-                    <div class="col"><div class="detail-row"><span class="label">Rows</span><span class="value">${s.total}</span></div></div>
-                    <div class="col"><div class="detail-row"><span class="label">Valid</span><span class="value">${s.valid}</span></div></div>
-                    <div class="col"><div class="detail-row"><span class="label">${kind === 'products' ? 'New' : 'Applied'}</span><span class="value">${s.new}</span></div></div>
-                    <div class="col"><div class="detail-row"><span class="label">Updates</span><span class="value">${s.updates}</span></div></div>
-                    <div class="col"><div class="detail-row"><span class="label">Units in</span><span class="value">+${s.units_in}</span></div></div>
-                </div>`;
+            s.rows = s.rows || [];
+            waitingRoom(s);
             if (s.error_count > 0) {
                 document.getElementById('imp-errors').classList.remove('d-none');
                 document.getElementById('imp-error-list').innerHTML = s.errors.map(e => `<li>${e}</li>`).join('');
@@ -205,10 +267,7 @@
         }
     });
 
-    form.action = actionProducts;
-    document.querySelectorAll('input[name="imp-kind"]').forEach((el) => el.addEventListener('change', () => {
-        form.action = el.value === 'products' ? actionProducts : actionStock;
-    }));
+    form.action = '{{ route('imports.apply') }}';
 })();
 </script>
 @endpush
