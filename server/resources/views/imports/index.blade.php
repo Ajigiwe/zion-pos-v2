@@ -43,7 +43,7 @@
             @csrf
             <input type="hidden" name="mode" id="imp-mode" value="add">
             <label class="drop-zone" id="imp-drop">
-                <input type="file" id="imp-file" accept=".csv,.xlsx,.xls" class="d-none">
+                <input type="file" id="imp-file" name="file" accept=".csv,.xlsx,.xls" class="d-none">
                 <span class="dz-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
                 </span>
