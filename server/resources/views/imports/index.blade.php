@@ -51,7 +51,7 @@
                 </span>
                 <span class="dz-text" id="dz-text">
                     <span class="t">Drop a CSV or XLSX file here, or click to browse</span>
-                    <span class="d">max 5 MB · columns follow the template for the selected type</span>
+                    <span class="d">headers matched by name (order-free) · max 5 MB</span>
                 </span>
                 <span class="chip-note">CHOOSE FILE</span>
             </label>

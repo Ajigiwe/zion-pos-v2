@@ -23,10 +23,51 @@ class ImportService
 
     public function readSpreadsheet($file): Collection
     {
-        return Excel::toCollection(null, $file)
-            ->first()
-            ->skip(1)   // header row
-            ->filter(fn ($row) => collect($row)->filter()->isNotEmpty());
+        $sheet = Excel::toCollection(null, $file)->first();
+        if (! $sheet || $sheet->isEmpty()) { return collect(); }
+
+        // Map by header names first (order-independent), fall back to the
+        // legacy positional template order when nothing recognizable.
+        $canonical = ['sku', 'barcode', 'name', 'category', 'brand', 'cost_price', 'selling_price', 'tax_rate', 'reorder_level', 'quantity'];
+        $aliases = [
+            'sku' => ['sku', 'code', 'item_code'],
+            'barcode' => ['barcode', 'bar_code', 'barcode_number'],
+            'name' => ['name', 'item_name', 'product', 'product_name', 'item'],
+            'category' => ['category', 'categories'],
+            'brand' => ['brand', 'make', 'manufacturer'],
+            'cost_price' => ['cost_price', 'cost', 'buying_price', 'cost_ghs'],
+            'selling_price' => ['selling_price', 'price', 'price_ghs', 'retail', 'retail_price'],
+            'tax_rate' => ['tax_rate', 'tax', 'vat'],
+            'reorder_level' => ['reorder_level', 'reorder', 'min_stock', 'reorder_point'],
+            'quantity' => ['quantity', 'qty', 'quantities'],
+        ];
+
+        $header = $sheet->first()->map(function ($h) {
+            return trim((string) preg_replace('/[^a-z0-9]+/', '_', strtolower(trim((string) $h))), '_');
+        });
+        $map = [];
+        foreach ($header as $idx => $h) {
+            foreach ($aliases as $canon => $list) {
+                if (! array_key_exists($canon, $map) && in_array($h, $list, true)) {
+                    $map[$canon] = $idx;
+                    break;
+                }
+            }
+        }
+
+        $dataRows = $sheet->skip(1)->filter(fn ($row) => collect($row)->filter()->isNotEmpty());
+
+        if (array_key_exists('sku', $map) || array_key_exists('name', $map)) {
+            return $dataRows->map(function ($row) use ($map, $canonical) {
+                return collect($canonical)->map(function ($canon) use ($row, $map) {
+                    $idx = $map[$canon] ?? null;
+
+                    return $idx === null ? '' : ($row[$idx] ?? '');
+                });
+            })->values();
+        }
+
+        return $dataRows->values();
     }
 
     public function importProducts(Collection $rows, string $fileName, bool $includeStock = false): ImportBatch
