@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="/css/app.css">
     <style>
-        @page { margin: 0; size: 80mm; }
+        @page { size: auto; margin: 0mm !important; }
         body { background: #f8fafc; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         .test-topbar {
             background: #ffffff;
@@ -37,9 +37,17 @@
             border-bottom: 1px solid #e2e8f0;
         }
         @media print {
-            body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                width: 100% !important;
+                height: auto !important;
+            }
             .test-topbar, .print-hint, .no-print { display: none !important; }
-            .test-content-wrap { border: none !important; box-shadow: none !important; margin: 0 !important; max-width: none !important; }
+            .test-content-wrap { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: none !important; }
+            #receipt-print { padding: 0 !important; margin: 0 !important; }
         }
     </style>
 </head>

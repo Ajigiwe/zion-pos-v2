@@ -539,16 +539,14 @@
         doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
             <title></title>
             <style>
-                @page { size: 80mm; margin: 0mm !important; }
+                @page { size: auto; margin: 0mm !important; }
                 html, body {
-                    width: 80mm !important;
-                    max-width: 80mm !important;
+                    width: 100% !important;
                     height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     background: #fff !important;
                     color: #000 !important;
-                    overflow: hidden !important;
                 }
                 .receipt {
                     font-family: 'Consolas', 'Courier New', monospace;
@@ -564,6 +562,8 @@
                     -webkit-font-smoothing: antialiased;
                     text-rendering: geometricPrecision;
                     box-sizing: border-box;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                 }
                 .receipt * { color: #000 !important; box-sizing: border-box; }
                 .receipt .receipt-center { text-align: center; }

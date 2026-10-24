@@ -8,15 +8,15 @@
 @php($currency = $store['currency'] ?? 'GHS')
 @php($tels = array_values(array_filter(array_map('trim', explode('/', $store['phone'] ?? '')))))
 <style>
-    @page { size: 80mm; margin: 0mm !important; }
+    @page { size: auto; margin: 0mm !important; }
     @media print {
         html, body {
-            width: 80mm !important;
-            max-width: 80mm !important;
+            width: 100% !important;
             height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden !important;
+            background: #fff !important;
+            color: #000 !important;
         }
     }
     .receipt {
@@ -31,6 +31,8 @@
         background: #fff;
         padding: 0 2px;
         box-sizing: border-box;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
     .receipt-divider {
         letter-spacing: 1px;
