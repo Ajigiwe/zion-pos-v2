@@ -222,6 +222,8 @@ Preserved movement types: `OPENING_STOCK, PURCHASE, BULK_IMPORT, SALE, REFUND, E
 
 - **2026-10-23: Apply Import blocked on a false "nothing ticked" (`fdee051`)** — the staging grid renders OUTSIDE the `<form id=imp-form>` element (its inputs are form-associated via `form="imp-form"`), so the pre-submit guard counting `form.querySelectorAll(...):checked` always found zero rows and warned even with everything ticked. Form-associated controls *submit* fine but aren't DOM children of the form — the counter now scans `#imp-preview input[name$="[include]"]:checked` document-wide. Verify after deploy: ticked rows + Apply goes through with the 457-row batch.
 
+- **2026-10-24: searchable product picker in the stock modal (`8a8ae65`)** — the Add/Adjust/Damage modal used a `<select>` with EVERY product; after the 457-row import that dropdown became unusable. Replaced with a search box: type name or SKU → filtered list (max 40 shown) → click or **Enter** to choose (Enter = first match, so barcode scanners work scan-then-enter); picker fills a hidden `product_id` and shows "Name (stock: x)". Implementing hit a Blade quirk first: `@json(...)` with a `[...]` inside the expression throws "Unclosed '[' does not match ')'" — moved the query into the controller (`pickerProducts`) so the view gets `@json($pickerProducts)`. Submit guard shows "Choose a product from the search list" instead of silently posting an empty product_id (hidden inputs skip native `required`).
+
 ## 9. Immediate Next Actions
 1. Composer installed and working (phar at `%LOCALAPPDATA%\Temp\opencode\composer.phar`; add `;C:\xampp\php` to PATH for CLI)
 2. Phase 2: login/session scaffold, sidebar layout, user-management CRUD with role assignment
