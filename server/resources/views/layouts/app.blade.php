@@ -13,6 +13,9 @@
     <link rel="stylesheet" href="/css/app.css">
     <style>
         :root { --accent: {{ theme_info()['accent'] }}; }
+        /* topbar collapse button flips chevrons when the sidebar is collapsed */
+        #topbar-collapse svg { transition: transform .15s ease; }
+        body.sidebar-collapsed #topbar-collapse svg { transform: rotate(180deg); }
     </style>
     @stack('styles')
 </head>
@@ -119,17 +122,19 @@
                 <button type="button" class="nav-round-btn mobile-menu-btn" id="mobile-menu" title="Menu" aria-label="Open menu" aria-expanded="false">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-                <button type="button" class="nav-round-btn" onclick="history.back()" title="Back" aria-label="Go back">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                <a href="{{ url('/') }}" class="nav-round-btn {{ url()->current() === url('/') ? 'is-here' : '' }}" title="Home" aria-label="Go to dashboard">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
-                </a>
                 <div class="topbar-title text-truncate">
                     @yield('page_title')
                 </div>
             </div>
             <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="nav-round-btn" id="topbar-collapse" title="Collapse menu" aria-label="Collapse menu">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+                    </button>
+                    <a href="{{ url('/') }}" class="nav-round-btn {{ url()->current() === url('/') ? 'is-here' : '' }}" title="Home" aria-label="Go to dashboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+                    </a>
+                </div>
                 @yield('page_actions')
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
@@ -218,21 +223,29 @@
                 ? stored === '1'
                 : window.matchMedia('(max-width: 991.98px)').matches;
             document.body.classList.toggle('sidebar-collapsed', collapsed);
+            var title = collapsed ? 'Expand menu' : 'Collapse menu';
+            ['sidebar-toggle', 'topbar-collapse'].forEach(function (id) {
+                var btn = document.getElementById(id);
+                if (btn) {
+                    btn.title = title;
+                    btn.setAttribute('aria-label', title);
+                }
+            });
             var btn = document.getElementById('sidebar-toggle');
             if (btn) {
-                btn.title = collapsed ? 'Expand menu' : 'Collapse menu';
-                btn.setAttribute('aria-label', btn.title);
                 var lbl = btn.querySelector('.nav-label');
                 if (lbl) lbl.textContent = collapsed ? 'Expand' : 'Collapse';
             }
         }
-        var btn = document.getElementById('sidebar-toggle');
-        if (btn) {
-            btn.addEventListener('click', function () {
-                localStorage.setItem(KEY, document.body.classList.contains('sidebar-collapsed') ? '0' : '1');
-                apply();
-            });
-        }
+        ['sidebar-toggle', 'topbar-collapse'].forEach(function (id) {
+            var btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    localStorage.setItem(KEY, document.body.classList.contains('sidebar-collapsed') ? '0' : '1');
+                    apply();
+                });
+            }
+        });
         // Hover titles come from the (possibly hidden) labels.
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.sidebar .nav-link').forEach(function (a) {
