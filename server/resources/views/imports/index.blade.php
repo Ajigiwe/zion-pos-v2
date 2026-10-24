@@ -138,23 +138,53 @@
         draft = null;
         el('imp-start').disabled = true;
     }
-    document.getElementById('k-products').addEventListener('change', () => setKind('products', 'add'));
-    document.getElementById('k-add').addEventListener('change', () => setKind('stock', 'add'));
-    document.getElementById('k-set').addEventListener('change', () => setKind('stock', 'set'));
+    function discardStaged() {
+        // server-side staging is authoritative - clear it and re-render fresh
+        const f = document.createElement('form');
+        f.method = 'POST';
+        f.action = '{{ route('imports.discard') }}';
+        const t = document.createElement('input');
+        t.type = 'hidden'; t.name = '_token'; t.value = '{{ csrf_token() }}';
+        f.appendChild(t);
+        document.body.appendChild(f);
+        f.submit();
+    }
+
+    document.getElementById('k-products').addEventListener('change', () => {
+        if (draft && !confirm('Changing the import type clears the staged waiting-room rows (nothing has been imported). Continue?')) {
+            el('k-products').checked = (kind === 'products');
+            if (kind !== 'products') { (mode === 'set' ? el('k-set') : el('k-add')).checked = true; el('k-products').checked = false; }
+            return;
+        }
+        setKind('products', 'add');
+    });
+    ['k-add', 'k-set'].forEach((id) => {
+        document.getElementById(id).addEventListener('change', (e) => {
+            if (draft && !e.target.checked) { return; }
+            if (draft && !confirm('Changing the import type clears the staged waiting-room rows (nothing has been imported). Continue?')) {
+                (kind === 'products' ? el('k-products') : (mode === 'set' ? el('k-set') : el('k-add'))).checked = true;
+                e.target.checked = false;
+                return;
+            }
+            setKind('stock', id === 'k-add' ? 'add' : 'set');
+        });
+    });
 
     file.addEventListener('change', () => { analyze.disabled = !file.files.length; start.disabled = true; showFileName(); });
 
-    // The waiting room: every staged row must have at least one include for the apply to make sense
+    // The waiting room: apply works from staged rows, so a file is only
+    // mandatory when nothing is staged yet
     form.addEventListener('submit', (e) => {
+        if (draft) {
+            const checked = form.querySelectorAll('input[name$="[include]"]:checked').length;
+            if (!checked) { e.preventDefault(); flashWarn('Nothing ticked in the waiting room — pick rows or untick nothing to import at all.', 'warn'); return; }
+            return;
+        }
         if (!file.files.length) { e.preventDefault(); flashWarn('Choose a file first.', 'warn'); return; }
         if (file.files[0].size > 5 * 1024 * 1024) {
             e.preventDefault();
             flashWarn('That file is over the 5 MB limit — split it or remove empty rows.', 'warn');
             return;
-        }
-        if (draft) {
-            const checked = form.querySelectorAll('input[name$="[include]"]:checked').length;
-            if (!checked) { e.preventDefault(); flashWarn('Nothing ticked in the waiting room — pick rows or untick nothing to import at all.', 'warn'); return; }
         }
     });
 
@@ -196,22 +226,22 @@
             const line = escapeHtml(r.line);
             const sku = escapeHtml(r.sku);
             const include = `<input class="form-check-input mt-0" type="checkbox" ${r.include ? 'checked' : ''} name="rows[${i}][include]" form="imp-form" value="1">`;
-            const skuInput = `<input class="form-control form-control-sm imp-in" style="min-width:9rem" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
+            const skuInput = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
             const lines = `<input type="hidden" name="rows[${i}][line]" form="imp-form" value="${line}">`;
 
             if (kind === 'products') {
-                const name = `<input class="form-control form-control-sm imp-in" style="min-width:12rem" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
-                const barcode = `<input class="form-control form-control-sm imp-in" style="min-width:10rem" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
-                const category = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
-                const brand = `<input class="form-control form-control-sm imp-in" style="min-width:8rem" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
-                const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
-                const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
-                const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" style="min-width:4.5rem" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
-                const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
+                const name = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
+                const barcode = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
+                const category = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
+                const brand = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
+                const cost = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][cost_price]" form="imp-form" value="${r.cost_price}">`;
+                const sell = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][selling_price]" form="imp-form" value="${r.selling_price}">`;
+                const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
+                const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
                 const state = r.auto_sku ? '<span class="small text-muted" title="SKU was minted because the sheet left it blank">auto · new</span>' : r.exists ? '<span class="small text-success">exists</span>' : '<span class="small text-danger">new</span>';
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td>${name}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${sell}</td><td>${tax}</td><td>${reorder}</td>`;
             } else {
-                const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" style="min-width:5.5rem" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
+                const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
                 row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td colspan="6" class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "unknown SKU — it will be reported as failed"}</td><td>${qty}</td>`;
             }
             row = row + lines;
@@ -227,15 +257,21 @@
                 <div class="col"><div class="detail-row"><span class="label">Updates</span><span class="value">${s.updates}</span></div></div>
                 <div class="col"><div class="detail-row"><span class="label">Units in</span><span class="value">+${s.units_in}</span></div></div>
             </div>
-            <div class="small text-muted mb-2"><b>Waiting room</b> — nobody has been imported yet. Adjust anything below (quantities, prices, even SKUs), untick rows you want to leave out, then press <b>Apply Import</b>. Unticked rows are ignored; the count above is from the original file.</div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="small text-muted flex-grow-1"><b>Waiting room</b> — nothing imported yet. Adjust anything below (quantities, prices, even SKUs), untick rows to leave out, then press <b>Apply Import</b>. Staged rows survive refreshes and deploys.</div>
+                <form method="POST" action="{{ route('imports.discard') }}" class="d-inline m-0" onsubmit="return confirm('Discard all staged rows? Nothing has been imported yet.')">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Discard staged</button>
+                </form>
+            </div>
             <div class="table-responsive" style="max-height:420px;">
-                <table class="table table-sm mb-0 align-middle">
+                <table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;">
                     <thead class="small"><tr>
-                        <th style="width:2.5rem;"></th><th class="text-muted" style="width:3.2rem;">Line</th><th style="width:10rem;">SKU</th>
+                        <th style="width:3%;"></th><th class="text-muted" style="width:4%;">Line</th><th style="width:9%;">SKU</th>
                         ${kind === 'products'
-                            ? '<th style="width:13rem;">Name</th><th style="width:11rem;">Barcode</th><th style="width:9rem;">Category</th><th style="width:9rem;">Brand</th><th class="text-end" style="width:7rem;">Cost GHS</th><th class="text-end" style="width:7rem;">Price GHS</th><th class="text-end" style="width:5.5rem;">Tax %</th><th class="text-end" style="width:6.5rem;">Reorder</th>'
-                            : '<th style="width:22rem;">Product on shelf</th><th class="text-end" style="width:7rem;">Qty</th>'}
-                        <th class="text-end small" style="width:5.5rem;">State</th>
+                            ? '<th style="width:17%;">Name</th><th style="width:12%;">Barcode</th><th style="width:10%;">Category</th><th style="width:10%;">Brand</th><th class="text-end" style="width:8%;">Cost GHS</th><th class="text-end" style="width:8%;">Price GHS</th><th class="text-end" style="width:6%;">Tax %</th><th class="text-end" style="width:7%;">Reorder</th>'
+                            : '<th style="width:65%;">Product on shelf</th><th class="text-end" style="width:8%;">Qty</th>'}
+                        <th class="text-end small" style="width:6%;">State</th>
                     </tr></thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
@@ -271,6 +307,34 @@
     });
 
     form.action = '{{ route('imports.apply') }}';
+
+    // Restore staged waiting-room rows after a refresh or deploy
+    const staged = @if(isset($staged) && is_array($staged) && !empty($staged['rows'])) {{ Js::from($staged) }} @else null @endif;
+    if (staged && staged.rows && staged.rows.length) {
+        kind = staged.kind || 'products';
+        mode = staged.mode || 'add';
+        if (kind === 'stock') {
+            (mode === 'set' ? el('k-set') : el('k-add')).checked = true;
+            el('k-products').checked = false;
+        } else {
+            el('k-products').checked = true;
+        }
+        el('imp-kind-value').value = kind;
+        el('imp-mode').value = mode;
+        el('kind-help').innerHTML = KIND_HELP[kind];
+        el('template-link').href = '{{ route('imports.template') }}' + (kind === 'products' ? '?kind=products' : '?kind=stock');
+        const txt = document.getElementById('dz-text');
+        txt.innerHTML = `<span class="t" style="color:var(--accent);">${escapeHtml(staged.file || 'spreadsheet')}</span><span class="d">staged rows below survive refreshes · analyze a new file to replace them</span>`;
+        txt.classList.add('chosen');
+        waitingRoom(staged);
+        if (staged.error_count > 0) {
+            el('imp-errors').classList.remove('d-none');
+            el('imp-error-list').innerHTML = (staged.errors || []).map(e => `<li>${e}</li>`).join('');
+            if (staged.error_count > (staged.errors || []).length) {
+                el('imp-error-list').insertAdjacentHTML('beforeend', `<li>…and ${staged.error_count - staged.errors.length} more</li>`);
+            }
+        }
+    }
 })();
 </script>
 @endpush

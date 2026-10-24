@@ -13,6 +13,10 @@ class ImportController extends Controller
     {
         return view('imports.index', [
             'batches' => ImportBatch::query()->with('creator:id,name')->latest('created_at')->limit(30)->get(),
+            // Waiting-room staging lives in the session (DB-backed in
+            // production), so a refresh - or even a mid-session deploy -
+            // brings the reviewed rows straight back.
+            'staged' => session('import_staging'),
         ]);
     }
 
@@ -57,6 +61,9 @@ class ImportController extends Controller
         $stats['file'] = $request->file('file')->getClientOriginalName();
         $stats['mode'] = $request->input('mode') ?? 'add';
         $stats['rows'] = $this->imports->draftRows($rows, $request->input('kind'), $stats['mode']);
+
+        // Persist so the waiting room survives refreshes/deploys (see index()).
+        $request->session()->put('import_staging', $stats);
 
         return response()->json($stats);
     }
@@ -113,6 +120,7 @@ class ImportController extends Controller
                 $r['quantity'] ?? 0,
             ]));
             $batch = $this->imports->importProducts($normalized, $data['file_name'], includeStock: true);
+            $request->session()->forget('import_staging');
 
             return redirect()->route('imports.index')->with('success',
                 sprintf('%s: %d products imported/updated, %d rows failed.',
@@ -125,9 +133,19 @@ class ImportController extends Controller
         ]));
         $batch = $this->imports->importStock($normalized, $data['file_name'], $data['mode']);
         $label = $data['mode'] === 'set' ? 'stock set to physical count' : 'stock quantities added';
+        $request->session()->forget('import_staging');
+        $label = $data['mode'] === 'set' ? 'stock set to physical count' : 'stock quantities added';
 
         return redirect()->route('imports.index')->with('success',
             sprintf('%s: %d rows applied (%s).', $batch->batch_number, $batch->successful_rows, $label));
+    }
+
+    /** Throw away staged waiting-room rows without importing anything. */
+    public function discardStaging(\Illuminate\Http\Request $request)
+    {
+        $request->session()->forget('import_staging');
+
+        return redirect()->route('imports.index')->with('warning', 'Staged waiting-room rows discarded — nothing was imported.');
     }
 
     /** Downloadable CSV template (Flutter template downloads parity). */
