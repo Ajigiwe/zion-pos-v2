@@ -111,8 +111,16 @@ class InventoryController extends Controller
             auth()->id(),
             'stock_movement',
             $movementId,
-            sprintf('%s × %s%s (%s)', $product->sku, $signed > 0 ? '+' : '', rtrim(rtrim((string) $signed, '0'), '.'), $data['reason'] ?? '—'),
+            sprintf('%s × %s%s (%s)', $product->sku, $signed > 0 ? '+' : '', rtrim(rtrim((string) $signed, '0'), '.'), $data['reason'] ?? '—')
         );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => sprintf('%s: %s%s of %s', $type->label(), $signed > 0 ? '+' : '', rtrim(rtrim((string) $signed, '0'), '.'), $product->name),
+                'new_stock' => (float) $product->stock_cached,
+            ]);
+        }
 
         return back()->with('success', sprintf('%s: %s%s of %s', $type->label(), $signed > 0 ? '+' : '', rtrim(rtrim((string) $signed, '0'), '.'), $product->name));
     }
