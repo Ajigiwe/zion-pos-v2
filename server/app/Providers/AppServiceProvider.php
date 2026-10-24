@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Product;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Enforce Bootstrap 5 styling on all paginated query results (prevents giant Tailwind SVGs)
+        Paginator::useBootstrapFive();
+
         // Superadmin bypasses every permission check in one line (RBAC §4).
         Gate::before(fn ($user) => $user->hasRole('superadmin') ? true : null);
 
