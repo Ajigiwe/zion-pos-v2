@@ -35,8 +35,8 @@ class ImportService
             'name' => ['name', 'item_name', 'product', 'product_name', 'item'],
             'category' => ['category', 'categories'],
             'brand' => ['brand', 'make', 'manufacturer'],
-            'cost_price' => ['cost_price', 'cost', 'buying_price', 'cost_ghs'],
-            'selling_price' => ['selling_price', 'price', 'price_ghs', 'retail', 'retail_price'],
+            'cost_price' => ['cost_price', 'cost', 'buying_price', 'cost_ghs', 'cost_price_ghc', 'cost_price_ghs'],
+            'selling_price' => ['selling_price', 'price', 'price_ghs', 'price_ghc', 'price_ghe', 'retail', 'retail_price'],
             'tax_rate' => ['tax_rate', 'tax', 'vat'],
             'reorder_level' => ['reorder_level', 'reorder', 'min_stock', 'reorder_point'],
             'quantity' => ['quantity', 'qty', 'quantities'],
@@ -55,7 +55,9 @@ class ImportService
             }
         }
 
-        $dataRows = $sheet->skip(1)->filter(fn ($row) => collect($row)->filter()->isNotEmpty());
+        $dataRows = $sheet->skip(1)->filter(function ($row) {
+            return collect($row)->contains(fn ($cell) => trim((string) $cell) !== '');
+        });
 
         if (array_key_exists('sku', $map) || array_key_exists('name', $map)) {
             return $dataRows->map(function ($row) use ($map, $canonical) {
