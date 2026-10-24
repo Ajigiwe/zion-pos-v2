@@ -4,8 +4,10 @@
 
 @push('styles')
 <style>
-    #pos-col-products { display: flex; flex-direction: column; min-width: 0; }
-    #pos-list { overflow-y: auto; min-height: 0; }
+    #pos-col-products { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    #pos-col-products > .input-group { flex-shrink: 0; }
+    #pos-category-row { flex-shrink: 0; min-height: 42px; }
+    #pos-list { flex-grow: 1; flex-shrink: 1; overflow-y: auto; min-height: 0; }
     #pos-col-cart { width: 360px; flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
     @media (max-width: 1199.98px) { #pos-col-cart { width: 340px; } }
     @media (max-width: 991.98px) {

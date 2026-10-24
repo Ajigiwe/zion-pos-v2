@@ -330,7 +330,15 @@ html[data-bs-theme="dark"] .change-box .amount { color: #C8E6C9; }
 .quick-chip { cursor: pointer; }
 
 /* Category / mode chips */
-.chip-row { display: flex; gap: .4rem; overflow-x: auto; }
+.chip-row {
+    display: flex;
+    gap: .4rem;
+    overflow-x: auto;
+    flex-shrink: 0;
+    min-height: 42px;
+    align-items: center;
+    padding: 2px 0 4px 0;
+}
 
 /* Slim, rounded scrollbars (killed the default Windows arrow scrollbars) */
 .chip-row, #pos-list, #pos-cart, .sidebar, .main, .modal-dialog .modal-body {
