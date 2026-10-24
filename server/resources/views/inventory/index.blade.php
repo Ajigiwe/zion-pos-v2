@@ -89,12 +89,12 @@
                 <input type="hidden" name="direction" id="inv-direction" value="in">
                 <div class="modal-body">
                     <label class="form-label small" id="inv-product-label">Product *</label>
-                    <select name="product_id" id="inv-product" class="form-select form-select-sm" required>
-                        <option value="">Select…</option>
-                        @foreach(\App\Models\Product::query()->where('is_active', true)->orderBy('name')->get(['id','name','stock_cached']) as $p)
-                            <option value="{{ $p->id }}">{{ $p->name }}  (stock: {{ rtrim(rtrim((string) $p->stock_cached, '0'), '.') }})</option>
-                        @endforeach
-                    </select>
+                    <input type="hidden" name="product_id" id="inv-product" value="">
+                    <label class="form-label small" id="inv-product-label">Product *</label>
+                    <div class="position-relative">
+                        <input type="text" id="inv-product-search" class="form-control form-control-sm" placeholder="Search by name or SKU…" autocomplete="off" spellcheck="false" required style="color:var(--text);">
+                        <div id="inv-product-list" class="list-group position-absolute w-100 d-none shadow-sm" style="max-height:240px;overflow-y:auto;z-index:1055;"></div>
+                    </div>
 
                     <label class="form-label small mt-2" id="inv-qty-label">Units received *</label>
                     <input name="quantity" id="inv-qty" type="number" step="0.5" min="0.001" required class="form-control form-control-sm">
@@ -121,6 +121,60 @@ const INV_MODES = {
     adjustment: { title: 'Adjust to physical count', q: 'Physical count *', qh: 'Records an ADJUSTMENT for the difference', reason: 'Reason *', prefill: 'Physical stock count' },
     damage:     { title: 'Damage / write-off', q: 'Units damaged *',  qh: 'Records a DAMAGE movement (−quantity)', reason: 'Reason *', prefill: '' },
 };
+
+// Searchable product picker: name-or-SKU filter, click or Enter to choose,
+// fills the hidden product_id for the normal form submit.
+const INV_PRODUCTS = @json($pickerProducts);
+const invSearch = document.getElementById('inv-product-search');
+const invList = document.getElementById('inv-product-list');
+const invProduct = document.getElementById('inv-product');
+let invPick = null;
+
+function invEscape(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function invRender(q) {
+    const term = q.trim().toLowerCase();
+    const matches = term ? INV_PRODUCTS.filter((p) => p.name.toLowerCase().includes(term) || (p.sku || '').toLowerCase().includes(term)) : INV_PRODUCTS;
+    const shown = matches.slice(0, 40);
+    invList.innerHTML = shown.length
+        ? shown.map((p) => {
+            const st = Number(p.stock_cached || 0);
+            const stTxt = Number.isInteger(st) ? String(st) : st.toFixed(1).replace(/\.0$/, '');
+            return `<button type="button" class="list-group-item list-group-item-action small px-3 py-1" data-id="${p.id}">${invEscape(p.name)} <span class="text-muted">· ${invEscape(p.sku || 'no SKU')} · stock ${stTxt}</span></button>`;
+        }).join('')
+        : '<div class="list-group-item small text-muted px-3 py-2">No product matches this search.</div>';
+    invList.classList.remove('d-none');
+}
+
+function invChoose(p) {
+    invPick = p;
+    invProduct.value = p.id;
+    const st = Number(p.stock_cached || 0);
+    const stTxt = Number.isInteger(st) ? String(st) : st.toFixed(1).replace(/\.0$/, '');
+    invSearch.value = p.name + ' (stock: ' + stTxt + ')';
+    invList.classList.add('d-none');
+}
+
+invSearch.addEventListener('focus', () => invRender(invSearch.value));
+invSearch.addEventListener('input', () => { invPick = null; invProduct.value = ''; invRender(invSearch.value); });
+invSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const first = invList.querySelector('[data-id]');
+        if (first) { invChoose(INV_PRODUCTS.find((p) => String(p.id) === first.dataset.id)); }
+    } else if (e.key === 'Escape') {
+        invList.classList.add('d-none');
+    }
+});
+invList.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-id]');
+    if (b) { invChoose(INV_PRODUCTS.find((p) => String(p.id) === b.dataset.id)); }
+});
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#inv-product-search') && !e.target.closest('#inv-product-list')) invList.classList.add('d-none');
+});
 document.querySelectorAll('[data-btn]').forEach((b) => b.addEventListener('click', () => {
     const mode = INV_MODES[b.dataset.btn];
     document.getElementById('inv-title').textContent = mode.title;
@@ -131,6 +185,23 @@ document.querySelectorAll('[data-btn]').forEach((b) => b.addEventListener('click
     const reasonLabel = document.getElementById('inv-reason-label');
     reasonLabel.textContent = mode.reason;
     document.getElementById('inv-reason').value = mode.prefill;
+    // reset the product picker for a fresh selection
+    invPick = null;
+    invProduct.value = '';
+    invSearch.value = '';
+    invList.classList.add('d-none');
 }));
+
+// hidden inputs skip native validation - guard the submit ourselves
+document.querySelector('#invModal form').addEventListener('submit', (e) => {
+    const err = document.getElementById('inv-error');
+    if (!invProduct.value) {
+        err.textContent = 'Choose a product from the search list.';
+        err.style.display = 'block';
+        e.preventDefault();
+    } else {
+        err.style.display = 'none';
+    }
+});
 </script>
 @endpush

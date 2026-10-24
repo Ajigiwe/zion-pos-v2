@@ -49,6 +49,8 @@ class InventoryController extends Controller
             'types' => MovementType::cases(),
             'filter' => $request->only(['product_id', 'type', 'from', 'to', 'search']),
             'productId' => $request->input('product_id'),
+            // searchable product picker in the add/adjust modal
+            'pickerProducts' => \App\Models\Product::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'sku', 'stock_cached']),
         ]);
     }
 
