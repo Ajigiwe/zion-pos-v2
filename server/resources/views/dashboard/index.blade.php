@@ -101,11 +101,12 @@
     @forelse($lowStock as $product)
         @php($rule = $product->reorder_level > 0 ? $product->reorder_level : $threshold)
         @if($canAdjust)
+            @php($sp = ['id' => $product->id, 'name' => $product->name, 'sku' => $product->sku, 'stock' => (float) $product->stock_cached, 'reorder' => (float) $rule])
             <button type="button" 
                 class="list-group-item list-group-item-action px-3 py-2 low-stock-row d-flex align-items-center gap-2 {{ $product->stock_cached <= 0 ? 'is-out' : 'is-warn' }} is-clickable"
                 data-bs-toggle="modal"
                 data-bs-target="#stockEditModal"
-                data-product='@json(["id" => $product->id, "name" => $product->name, "sku" => $product->sku, "stock" => (float) $product->stock_cached, "reorder" => (float) $rule])'
+                data-product='@json($sp)'
                 title="Click to update stock for {{ $product->name }}">
                 <span class="ls-icon">
                     @if($product->stock_cached <= 0)
