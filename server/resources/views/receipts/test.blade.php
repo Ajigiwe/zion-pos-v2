@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="/css/app.css">
     <style>
-        @page { margin: 0; size: auto; }
+        @page { margin: 0; size: 80mm; }
         body { background: #f8fafc; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         .test-topbar {
             background: #ffffff;
