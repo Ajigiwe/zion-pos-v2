@@ -16,6 +16,10 @@
     <div class="print-hint no-print">
         <button onclick="window.print()">Print test receipt</button>
         <div class="text-muted">Sends an {{ $store['paper_width'] }}mm sample to verify cutter, font clarity and communication.</div>
+        <div class="text-muted" style="max-width:520px;margin:6px auto 0;">
+            Seeing a print dialog? That is Chrome, not the store — for silent output set the receipt printer as the Windows
+            <b>default printer</b> and start Chrome with <code>--kiosk-printing</code>; this page will then print itself straight out.
+        </div>
     </div>
     <div id="receipt-print">
         @include('receipts._thermal', ['r' => $r, 'store' => $store])

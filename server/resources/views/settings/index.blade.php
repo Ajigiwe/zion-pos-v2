@@ -214,7 +214,7 @@
                         </div>
                         <div>
                             <div class="fw-semibold small">Instant Direct Thermal Printing</div>
-                            <div class="text-muted" style="font-size:.75rem;">Send receipts straight to the printer silently with 0 clicks after sale. (Browser may show a preview — set the receipt printer as default for 0-click flow.)</div>
+                            <div class="text-muted" style="font-size:.75rem;">Auto-fires printing right after a sale. For it to come out <b>without a dialog</b>: set the thermal printer as the Windows <b>default printer</b>, and launch the till's Chrome with <code>--kiosk-printing</code> (add it to the shortcut's target). Chrome chooses the printer at the OS level; websites cannot list or silently pick devices.</div>
                         </div>
                     </div>
                     <label class="form-label small mb-1" style="letter-spacing:.5px;color:var(--muted);font-weight:700;">CONNECTED PRINTERS</label>
@@ -223,7 +223,7 @@
                         <input class="form-control form-control-sm" name="printer[selectedName]" value="{{ old('printer.selectedName', \App\Models\Setting::get('printer.selectedName', 'System Default Printer')) }}" placeholder="System Default Printer" style="max-width:230px;">
                         <span class="pill ms-auto">BROWSER SPOOLER</span>
                     </div>
-                    <div class="text-muted" style="font-size:.75rem;">Browsers pick the physical device per printer OS default; direct mode opens silent print to your default receipt printer.</div>
+                    <div class="text-muted" style="font-size:.75rem;">The selected name is stored for reference only (a web app cannot query installed hardware) — the OS default printer and Chrome <code>--kiosk-printing</code> decide where receipts land. <span class="badge text-bg-secondary">SCANNERS</span> USB/Bluetooth keyboard-wedge scanners need no setup: focus the POS search or Scan dialog, scan — the code arrives typed with Enter.</div>
                 </div>
                 <div class="card-footer d-flex flex-wrap align-items-center gap-2">
                     <a href="{{ route('settings.printer.test') }}" target="_blank" class="btn btn-sm btn-accent">
