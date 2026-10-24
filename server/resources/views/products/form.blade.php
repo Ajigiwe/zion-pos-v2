@@ -138,16 +138,84 @@ function ean13generate() {
     return base;
 }
 document.getElementById('gen-barcode').addEventListener('click', function () {
-    document.getElementById('barcode-input').value = ean13generate();
+    const bcInput = document.getElementById('barcode-input');
+    bcInput.value = ean13generate();
+    bcInput.dispatchEvent(new Event('input', { bubbles: true }));
 });
+
+// Barcode input: never submit form on Enter, move to name or next field instead
+const barcodeInput = document.getElementById('barcode-input');
+barcodeInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        barcodeInput.style.backgroundColor = '#dcfce7';
+        setTimeout(() => barcodeInput.style.backgroundColor = '', 600);
+        const nameField = document.querySelector('input[name="name"]');
+        if (nameField && !nameField.value) nameField.focus();
+    }
+});
+
+// Scan modal: auto-focus scan-form-input when shown
+const scanModalEl = document.getElementById('scanModal');
+if (scanModalEl) {
+    scanModalEl.addEventListener('shown.bs.modal', function () {
+        const scanInput = document.getElementById('scan-form-input');
+        if (scanInput) {
+            scanInput.value = '';
+            scanInput.focus();
+        }
+    });
+}
+
 // scan dialog auto-submits whenever the scanner sends Enter
 const scanInput = document.getElementById('scan-form-input');
 scanInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         e.preventDefault();
         const code = scanInput.value.trim();
-        if (code.length >= 4) { document.getElementById('barcode-input').value = code; bootstrap.Modal.getInstance(document.getElementById('scanModal')).hide(); }
+        if (code.length >= 2) {
+            barcodeInput.value = code;
+            barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            barcodeInput.style.backgroundColor = '#dcfce7';
+            setTimeout(() => barcodeInput.style.backgroundColor = '', 800);
+            bootstrap.Modal.getInstance(scanModalEl)?.hide();
+            const nameField = document.querySelector('input[name="name"]');
+            if (nameField && !nameField.value) nameField.focus();
+        }
     }
 });
+
+// Global hardware scanner listener on the form: captures rapid scanner keystrokes anywhere on page
+let scanBuffer = '';
+let lastStrokeTime = 0;
+window.addEventListener('keydown', function (e) {
+    const now = Date.now();
+    const interval = now - lastStrokeTime;
+    lastStrokeTime = now;
+
+    if (e.key === 'Enter') {
+        if (scanBuffer.length >= 2 && interval < 90) {
+            e.preventDefault();
+            e.stopPropagation();
+            barcodeInput.value = scanBuffer.trim();
+            barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            barcodeInput.style.backgroundColor = '#dcfce7';
+            setTimeout(() => barcodeInput.style.backgroundColor = '', 800);
+            bootstrap.Modal.getInstance(scanModalEl)?.hide();
+            const nameField = document.querySelector('input[name="name"]');
+            if (nameField && !nameField.value) nameField.focus();
+        }
+        scanBuffer = '';
+        return;
+    }
+
+    if (e.key.length === 1) {
+        if (interval < 60) {
+            scanBuffer += e.key;
+        } else {
+            scanBuffer = e.key;
+        }
+    }
+}, true);
 </script>
 @endpush

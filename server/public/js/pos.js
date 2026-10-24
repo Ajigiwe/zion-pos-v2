@@ -438,33 +438,57 @@
         }
         // Offline / fallback: build the receipt locally (Flutter parity skeleton).
         const store = window.POS_STORE || {};
-        const rows = sale.items.map((i) =>
-            `<div style="font-weight:700;font-size:12px;">${escapeHtml(i.name)}</div>
-             <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;"><span>${trimNum(i.quantity)} x ${CUR} ${i.unit_price.toFixed(2)}</span><span style="font-weight:700;">${CUR} ${(i.unit_price * i.quantity).toFixed(2)}</span></div>`).join('');
-        const pays = sale.payments.map((p) => `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>${(p.method || '').replace('_', ' ').toUpperCase()}:</span><span>${CUR} ${Number(p.amount).toFixed(2)}</span></div>`).join('');
+        let totalQty = 0;
+        const rows = sale.items.map((i) => {
+            const q = Number(i.quantity) || 1;
+            totalQty += q;
+            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:12px;font-weight:700;margin:2px 0;">
+                <span style="width:16%;">${trimNum(q)}x</span>
+                <span style="flex-grow:1;padding:0 4px;word-break:break-word;">${escapeHtml(i.name)}</span>
+                <span style="text-align:right;white-space:nowrap;">${CUR} ${(i.unit_price * q).toFixed(2)}</span>
+            </div>`;
+        }).join('');
+        const pays = sale.payments.map((p) => {
+            const m = (p.method || 'cash').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>Paid (${m})</span><span>${CUR} ${Number(p.amount).toFixed(2)}</span></div>`;
+        }).join('');
         printHtml(`
-            <div class="receipt receipt-center">
-                ${store.show_store_name !== '0' ? `<div style="font-weight:900;font-size:15px;letter-spacing:.3px;text-transform:uppercase;line-height:1.2;">${escapeHtml(store.name || '').toUpperCase()}</div>` : ''}
-                ${store.show_store_address !== '0' && store.address ? `<div style="font-size:11.5px;font-weight:600;margin-top:2px;">${escapeHtml(store.address)}</div>` : ''}
-                ${store.show_store_phone !== '0' && store.phone ? `<div style="font-size:11.5px;font-weight:600;">Tel: ${escapeHtml(store.phone)}</div>` : ''}
-                ${store.header_custom_text ? `<div style="font-size:11px;font-weight:600;margin-top:2px;">${escapeHtml(store.header_custom_text)}</div>` : ''}
-            </div>
-            <div class="solid-rule" style="margin:5px 0;"></div>
-            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><b>RECEIPT: ${escapeHtml(sale.receipt_number)}</b></div>
-            <div style="font-size:11.5px;font-weight:600;">${escapeHtml(sale.created_at || '')}</div>
-            <hr>
-            ${rows}
-            <hr>
-            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>Subtotal:</span><span>${CUR} ${Number(sale.subtotal).toFixed(2)}</span></div>
-            ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>Discount:</span><span>- ${CUR} ${Number(sale.discount).toFixed(2)}</span></div>` : ''}
-            ${store.show_tax !== '0' && sale.tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>VAT incl.:</span><span>${CUR} ${Number(sale.tax).toFixed(2)}</span></div>` : ''}
-            <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;margin-top:2px;"><span>TOTAL:</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
-            ${pays}
-            ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change:</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
-            ${(sale.offline ? '<div style="text-align:center;font-weight:800;font-size:12px;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
-            <hr>
-            <div class="receipt-center" style="white-space:pre-line;font-size:11px;font-weight:600;line-height:1.3;">${escapeHtml(store.footer_message || '')}</div>
-            ${store.show_barcode !== '0' ? `<div style="height:8mm;"></div>` : ''}`);
+            <div class="receipt">
+                <div class="receipt-center">
+                    ${store.show_store_name !== '0' ? `<div style="font-weight:900;font-size:16px;letter-spacing:.5px;text-transform:uppercase;line-height:1.2;">${escapeHtml(store.name || '').toUpperCase()}</div>` : ''}
+                    ${store.show_store_address !== '0' && store.address ? `<div style="font-size:12px;font-weight:700;margin-top:2px;">${escapeHtml(store.address)}</div>` : ''}
+                    ${store.show_store_phone !== '0' && store.phone ? `<div style="font-size:12px;font-weight:700;">Tel: ${escapeHtml(store.phone)}</div>` : ''}
+                    ${store.header_custom_text ? `<div style="font-size:11.5px;font-weight:700;margin-top:2px;line-height:1.25;">${escapeHtml(store.header_custom_text)}</div>` : ''}
+                </div>
+                <div class="receipt-divider"></div>
+                <div style="font-size:11.5px;font-weight:700;display:flex;justify-content:space-between;flex-wrap:wrap;">
+                    <span>RECEIPT: ${escapeHtml(sale.receipt_number)}</span>
+                    <span>${escapeHtml(sale.created_at || '')}</span>
+                </div>
+                <div class="receipt-divider"></div>
+                <div style="display:flex;justify-content:space-between;font-weight:900;font-size:12px;">
+                    <span style="width:16%;">QTY</span>
+                    <span style="flex-grow:1;padding:0 4px;">ITEM DESCRIPTION</span>
+                    <span style="text-align:right;">AMOUNT</span>
+                </div>
+                <div class="receipt-divider"></div>
+                ${rows}
+                <div style="margin-top:4px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>Subtotal</span><span>${CUR} ${Number(sale.subtotal).toFixed(2)}</span></div>
+                    ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>Discount</span><span>- ${CUR} ${Number(sale.discount).toFixed(2)}</span></div>` : ''}
+                    ${store.show_tax !== '0' && sale.tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>VAT incl.</span><span>${CUR} ${Number(sale.tax).toFixed(2)}</span></div>` : ''}
+                </div>
+                <div class="receipt-divider"></div>
+                <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;letter-spacing:.3px;"><span>TOTAL DUE</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
+                <div class="receipt-divider"></div>
+                ${pays}
+                ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
+                ${(sale.offline ? '<div style="text-align:center;font-weight:800;font-size:12px;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
+                <div class="receipt-divider"></div>
+                <div class="receipt-center" style="font-size:12px;font-weight:700;margin:2px 0;">Total Items: ${trimNum(totalQty)}</div>
+                <div class="receipt-center" style="white-space:pre-line;font-size:11.5px;font-weight:700;line-height:1.3;margin-top:2px;">${escapeHtml(store.footer_message || '')}</div>
+                ${store.show_barcode !== '0' ? `<div class="receipt-divider" style="margin-top:6px;"></div><div style="height:8mm;"></div>` : ''}
+            </div>`);
     }
 
     function printHtml(inner) {
@@ -603,6 +627,14 @@
             $('#scan-visual').classList.remove('d-none');
             $('#scan-error').classList.add('d-none');
         });
+        const scanModalEl = document.getElementById('scanModal');
+        if (scanModalEl) {
+            scanModalEl.addEventListener('shown.bs.modal', () => {
+                const inp = $('#scan-input');
+                if (inp) { inp.value = ''; inp.focus(); }
+            });
+        }
+
         $('#scan-clear').addEventListener('click', () => $('#scan-input').value = '');
         $('#scan-find').addEventListener('click', () => {
             const find = $('#scan-find');
@@ -619,6 +651,41 @@
             }
         });
         $('#scan-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#scan-find').click(); } });
+
+        // Global hardware scanner listener: automatically adds scanned product to cart even if search is not focused
+        let posScanBuf = '';
+        let posScanTime = 0;
+        window.addEventListener('keydown', (e) => {
+            const act = document.activeElement;
+            if (act && (act.id === 'pos-pay-amount' || act.id === 'pos-discount' || act.id === 'scan-input')) return;
+            const now = Date.now();
+            const diff = now - posScanTime;
+            posScanTime = now;
+
+            if (e.key === 'Enter') {
+                if (posScanBuf.length >= 2 && diff < 90) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const code = posScanBuf.trim();
+                    posScanBuf = '';
+                    const searchBox = $('#pos-search');
+                    if (searchBox) {
+                        searchBox.value = code;
+                        searchSubmit();
+                    }
+                }
+                posScanBuf = '';
+                return;
+            }
+
+            if (e.key.length === 1) {
+                if (diff < 60) {
+                    posScanBuf += e.key;
+                } else {
+                    posScanBuf = e.key;
+                }
+            }
+        }, true);
 
         $('#pos-discount').addEventListener('input', (e) => { discount = parseFloat(e.target.value || '0'); renderCart(); });
         $('#pos-pay-add').addEventListener('click', addPayment);
