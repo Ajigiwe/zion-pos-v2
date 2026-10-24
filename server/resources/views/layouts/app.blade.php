@@ -128,6 +128,9 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="nav-round-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='{{ url('/') }}'" title="Back" aria-label="Go back">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
                     <button type="button" class="nav-round-btn" id="topbar-collapse" title="Collapse menu" aria-label="Collapse menu">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
                     </button>

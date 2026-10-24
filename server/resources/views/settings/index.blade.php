@@ -226,9 +226,12 @@
                     <div class="text-muted" style="font-size:.75rem;">The selected name is stored for reference only (a web app cannot query installed hardware) — the OS default printer and Chrome <code>--kiosk-printing</code> decide where receipts land. <span class="badge text-bg-secondary">SCANNERS</span> USB/Bluetooth keyboard-wedge scanners need no setup: focus the POS search or Scan dialog, scan — the code arrives typed with Enter.</div>
                 </div>
                 <div class="card-footer d-flex flex-wrap align-items-center gap-2">
-                    <a href="{{ route('settings.printer.test') }}" target="_blank" class="btn btn-sm btn-accent">
+                    <button type="button" onclick="printTestReceiptDirect(event)" class="btn btn-sm btn-accent" id="btn-print-test">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 13h10v8H7z"/></svg>
                         Print Test Receipt
+                    </button>
+                    <a href="{{ route('settings.printer.test') }}" class="btn btn-sm btn-outline-secondary" title="View test receipt page">
+                        Open Test Page
                     </a>
                     <span class="text-muted small flex-grow-1" style="min-width:220px;">Sends an {{ $store['paper_width'] ?? '80' }}mm sample to verify cutter, font and communication.</span>
                     <button class="btn btn-sm btn-outline-accent">Save</button>
@@ -634,5 +637,35 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.style.setProperty('--accent', '#' + hex);
     });
 });
+
+window.printTestReceiptDirect = function (e) {
+    if (e) e.preventDefault();
+    var btn = document.getElementById('btn-print-test');
+    var originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Printing...';
+    }
+    var frame = document.getElementById('test-receipt-frame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'test-receipt-frame';
+        frame.style.position = 'fixed';
+        frame.style.right = '0';
+        frame.style.bottom = '0';
+        frame.style.width = '0';
+        frame.style.height = '0';
+        frame.style.border = '0';
+        frame.style.opacity = '0';
+        document.body.appendChild(frame);
+    }
+    frame.src = '{{ route('settings.printer.test') }}?direct=1&t=' + Date.now();
+    setTimeout(function () {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }, 2000);
+};
 </script>
 @endpush
