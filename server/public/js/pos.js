@@ -528,20 +528,22 @@
             frame.style.position = 'fixed';
             frame.style.right = '0';
             frame.style.bottom = '0';
-            frame.style.width = '0';
-            frame.style.height = '0';
+            frame.style.width = '300px';
+            frame.style.height = '800px';
             frame.style.border = '0';
             frame.style.opacity = '0';
+            frame.style.pointerEvents = 'none';
             document.body.appendChild(frame);
         }
+        // Step 1: write the receipt into the iframe so we can measure it
         const doc = frame.contentWindow.document;
         doc.open();
         doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
             <title></title>
-            <style>
-                @page { size: auto; margin: 0mm !important; }
+            <style id="page-style">
+                @page { size: 72mm 200mm; margin: 0mm !important; }
                 html, body {
-                    width: 100% !important;
+                    width: 72mm !important;
                     height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
@@ -552,7 +554,7 @@
                     font-family: 'Consolas', 'Courier New', monospace;
                     width: 72mm;
                     max-width: 72mm;
-                    margin: 0 auto;
+                    margin: 0;
                     font-size: 12px;
                     line-height: 1.35;
                     color: #000 !important;
@@ -562,8 +564,6 @@
                     -webkit-font-smoothing: antialiased;
                     text-rendering: geometricPrecision;
                     box-sizing: border-box;
-                    page-break-inside: avoid !important;
-                    break-inside: avoid !important;
                 }
                 .receipt * { color: #000 !important; box-sizing: border-box; }
                 .receipt .receipt-center { text-align: center; }
@@ -583,14 +583,32 @@
             </style>
         </head><body><div id="receipt-print">${inner}</div></body></html>`);
         doc.close();
+
+        // Step 2: after a brief render, measure the content height and update @page to match exactly
         setTimeout(function () {
             try {
-                frame.contentWindow.focus();
-                frame.contentWindow.print();
+                const receiptEl = doc.getElementById('receipt-print');
+                if (receiptEl) {
+                    // Measure actual rendered height in mm (96 DPI: 1mm ≈ 3.7795px)
+                    const heightPx = receiptEl.scrollHeight || receiptEl.offsetHeight;
+                    const heightMm = Math.ceil(heightPx / 3.7795) + 5; // +5mm safety margin
+                    const pageStyle = doc.getElementById('page-style');
+                    if (pageStyle) {
+                        pageStyle.textContent = pageStyle.textContent.replace(
+                            /@page\s*\{[^}]*\}/,
+                            `@page { size: 72mm ${heightMm}mm; margin: 0mm !important; }`
+                        );
+                    }
+                }
+                // Step 3: give Chrome a moment to re-layout with the new page size, then print
+                setTimeout(function () {
+                    frame.contentWindow.focus();
+                    frame.contentWindow.print();
+                }, 100);
             } catch (e) {
                 console.error('Receipt print failed:', e);
             }
-        }, 150);
+        }, 200);
     }
 
     // ---------- history mode ----------

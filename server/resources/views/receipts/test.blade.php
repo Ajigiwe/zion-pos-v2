@@ -5,8 +5,8 @@
     <title>Print test — {{ $store['name'] }}</title>
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="/css/app.css">
-    <style>
-        @page { size: auto; margin: 0mm !important; }
+    <style id="page-style">
+        @page { size: 72mm 200mm; margin: 0mm !important; }
         body { background: #f8fafc; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         .test-topbar {
             background: #ffffff;
@@ -62,7 +62,7 @@
             <a href="{{ route('pos') }}" class="btn btn-sm btn-outline-primary">POS Register</a>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <button onclick="window.print()" class="btn btn-sm btn-accent d-inline-flex align-items-center gap-1">
+            <button onclick="fitPageToReceipt(); setTimeout(function(){ window.print(); }, 100);" class="btn btn-sm btn-accent d-inline-flex align-items-center gap-1">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 13h10v8H7z"/></svg>
                 Print Test Receipt
             </button>
@@ -81,11 +81,26 @@
     </div>
 
     <script>
+        function fitPageToReceipt() {
+            var receipt = document.querySelector('.receipt');
+            if (receipt) {
+                var heightPx = receipt.scrollHeight || receipt.offsetHeight;
+                var heightMm = Math.ceil(heightPx / 3.7795) + 5;
+                var style = document.getElementById('page-style');
+                if (style) {
+                    style.textContent = style.textContent.replace(
+                        /@page\s*\{[^}]*\}/,
+                        '@page { size: 72mm ' + heightMm + 'mm; margin: 0mm !important; }'
+                    );
+                }
+            }
+        }
         var params = new URLSearchParams(location.search);
         if (params.get('direct') === '0') { /* preview only */ }
         else {
             setTimeout(function () {
-                window.print();
+                fitPageToReceipt();
+                setTimeout(function () { window.print(); }, 100);
             }, 250);
         }
     </script>

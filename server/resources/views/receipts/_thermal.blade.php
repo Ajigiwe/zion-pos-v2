@@ -7,8 +7,8 @@
 @php($feed = max(10, min(120, (float) ($store['bottom_feed_space'] ?? 50))))
 @php($currency = $store['currency'] ?? 'GHS')
 @php($tels = array_values(array_filter(array_map('trim', explode('/', $store['phone'] ?? '')))))
-<style>
-    @page { size: auto; margin: 0mm !important; }
+<style id="page-style">
+    @page { size: 72mm 200mm; margin: 0mm !important; }
     @media print {
         html, body {
             width: 100% !important;

@@ -573,3 +573,33 @@ html[data-bs-theme="dark"] .ls-count.out { color: #F87171; }
     #pos-list { max-height: 42vh; }
     .input-group-lg .form-control { font-size: .95rem; }
 }
+
+/* --- Print media: clean output for receipts and reports --- */
+@media print {
+    aside.sidebar,
+    .topbar,
+    .sidebar-backdrop,
+    .no-print,
+    .sync-footer,
+    .modal,
+    .alert {
+        display: none !important;
+    }
+    body, html, .either, .main, main {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    .card, .feature-card {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    .card-body {
+        padding: 0 !important;
+        background: transparent !important;
+    }
+}

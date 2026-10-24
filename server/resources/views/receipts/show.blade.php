@@ -4,9 +4,25 @@
 
 @section('page_actions')
 <div class="no-print d-flex gap-2">
-    <button onclick="window.print()" class="btn btn-sm btn-accent">Print</button>
+    <button onclick="fitPageToReceipt(); setTimeout(function(){ window.print(); }, 100);" class="btn btn-sm btn-accent">Print</button>
     <a href="{{ route('receipts.pdf', $sale) }}" class="btn btn-sm btn-outline-secondary">PDF copy</a>
 </div>
+<script>
+function fitPageToReceipt() {
+    var receipt = document.querySelector('.receipt');
+    if (receipt) {
+        var heightPx = receipt.scrollHeight || receipt.offsetHeight;
+        var heightMm = Math.ceil(heightPx / 3.7795) + 5;
+        var style = document.getElementById('page-style');
+        if (style) {
+            style.textContent = style.textContent.replace(
+                /@page\s*\{[^}]*\}/,
+                '@page { size: 72mm ' + heightMm + 'mm; margin: 0mm !important; }'
+            );
+        }
+    }
+}
+</script>
 @endsection
 
 @section('content')
