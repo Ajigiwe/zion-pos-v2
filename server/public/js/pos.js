@@ -366,15 +366,28 @@
             if (!offlineMode) {
                 const res = await fetch('/pos', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || csrf,
+                    },
                     body: JSON.stringify(payload),
                 });
                 if (!res.ok) {
                     const msg = await safeError(res);
                     throw new Error(msg);
                 }
+                const contentType = res.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error('Server returned an unexpected response. Please refresh the page (F5).');
+                }
                 const json = await res.json();
                 sale = json.sale;
+                if (sale && sale.change === undefined) {
+                    const paidAmt = (sale.payments || []).reduce((s, p) => s + Number(p.amount), 0);
+                    sale.change = Math.max(0, paidAmt - Number(sale.total));
+                }
             } else {
                 const idempotencyKey = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random().toString(16).slice(2);
                 sale = {
@@ -396,7 +409,7 @@
                 }
             }
 
-            flash(`Sale ${sale.receipt_number} complete (${money(sale.total)})` + (sale.change_due || sale.change > 0 ? ` · Change due: ${money(sale.change || 0)}` : ''), 'info');
+            flash(`Sale ${sale.receipt_number} complete (${money(sale.total)})` + (sale.change > 0 || (sale.payments && sale.payments.length && sale.payments[0].method === 'cash') ? ` · Change: ${money(sale.change || 0)}` : ''), 'info');
             printReceipt(sale);
             resetSale();
         } catch (e) {
@@ -408,10 +421,26 @@
     }
 
     async function safeError(res) {
+        if (res.status === 419) {
+            return 'Your session has expired. Please refresh the page (F5) and try again.';
+        }
+        if (res.status === 401) {
+            return 'You have been logged out. Please refresh the page to log back in.';
+        }
         try {
-            const j = await res.json();
-            return j.message || j.error || `${res.status}`;
-        } catch { return `${res.status}`; }
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const j = await res.json();
+                if (j.errors) {
+                    const firstKey = Object.keys(j.errors)[0];
+                    if (firstKey && j.errors[firstKey].length) {
+                        return j.errors[firstKey][0];
+                    }
+                }
+                return j.message || j.error || `Server error (${res.status})`;
+            }
+            return `Server error (${res.status}). Please refresh the page.`;
+        } catch { return `Server error (${res.status})`; }
     }
 
     function resetSale() {

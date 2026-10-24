@@ -87,6 +87,10 @@ class POSController extends Controller
             'till_id' => config('pos.till_id'),
         ]);
 
-        return response()->json(['sale' => $sale->load('items.product:id,name,sku,barcode', 'payments')], 201);
+        $sale->load('items.product:id,name,sku,barcode', 'payments');
+        $paid = (float) $sale->payments->sum('amount');
+        $sale->change = max(0.0, round($paid - (float) $sale->total, 2));
+
+        return response()->json(['sale' => $sale], 201);
     }
 }

@@ -185,8 +185,21 @@ class SaleService
 
         $sum = array_sum(array_map(fn ($p) => (float) $p['amount'], $payments));
 
-        if (abs($sum - $total) > 0.01) {
-            throw ValidationException::withMessages(['payments' => 'The recorded payments must add up to the sale total.']);
+        if ($sum < $total - 0.01) {
+            throw ValidationException::withMessages(['payments' => 'The recorded payments do not cover the sale total.']);
+        }
+
+        $excess = round($sum - $total, 2);
+        if ($excess > 0.01) {
+            $cashSum = 0.0;
+            foreach ($payments as $p) {
+                if (($p['method'] ?? '') === 'cash') {
+                    $cashSum += (float) $p['amount'];
+                }
+            }
+            if ($cashSum < $excess) {
+                throw ValidationException::withMessages(['payments' => 'Only cash payments allow overpayment for change.']);
+            }
         }
 
         foreach ($payments as $payment) {
