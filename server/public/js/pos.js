@@ -482,7 +482,7 @@
                 <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;letter-spacing:.3px;"><span>TOTAL DUE</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
                 <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 ${pays}
-                ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
+                ${store.show_change_due !== '0' ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change</span><span>${CUR} ${Number(sale.change || 0).toFixed(2)}</span></div>` : ''}
                 ${(sale.offline ? '<div style="text-align:center;font-weight:800;font-size:12px;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
                 <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 <div class="receipt-center" style="font-size:12px;font-weight:700;margin:2px 0;">Total Items: ${trimNum(totalQty)}</div>

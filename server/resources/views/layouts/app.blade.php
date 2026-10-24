@@ -10,7 +10,7 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/app.css?v={{ time() }}">
     <style>
         :root { --accent: {{ theme_info()['accent'] }}; }
         /* topbar collapse button flips chevrons when the sidebar is collapsed */

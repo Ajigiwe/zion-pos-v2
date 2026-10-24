@@ -144,10 +144,10 @@
             @endforeach
         @endif
     @endif
-    @if(($store['show_change_due'] ?? true) && (float) ($r['change'] ?? 0) > 0)
+    @if($store['show_change_due'] ?? true)
         <div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;">
             <span>Change</span>
-            <span>{{ $currency }} {{ number_format((float) $r['change'], 2) }}</span>
+            <span>{{ $currency }} {{ number_format((float) ($r['change'] ?? 0), 2) }}</span>
         </div>
     @endif
     <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>

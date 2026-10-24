@@ -99,12 +99,13 @@
             </div>
 
             {{-- payment capture: method chips + amount share one row; quick chips above --}}
-            <div id="pos-method-chips" class="d-flex gap-1 flex-wrap"></div>
-            <div id="pos-quick-chips" class="d-flex flex-wrap mb-1" style="gap:.35rem;"></div>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-1" id="pos-payment-entry">
-                <input id="pos-pay-amount" class="form-control form-control-sm text-end" style="width:96px;" type="number" min="0" step="0.01" placeholder="Amount received">
-                <input id="pos-pay-ref" class="form-control form-control-sm" placeholder="Payer / txn ID" style="display:none;width:150px;">
-                <button id="pos-pay-add" class="btn btn-sm btn-accent flex-shrink-0 ms-auto" style="min-width:56px;">Add</button>
+            <div id="pos-method-chips" class="d-flex gap-1 flex-wrap mb-1"></div>
+            <div id="pos-quick-chips" class="d-flex flex-wrap mb-2" style="gap:.35rem;"></div>
+            <div class="input-group mb-2" id="pos-payment-entry">
+                <span class="input-group-text fw-bold text-muted px-2" style="font-size:0.95rem;">{{ $store['currency'] ?? 'GHS' }}</span>
+                <input id="pos-pay-amount" class="form-control fw-bold" style="font-size:1.15rem;min-width:140px;" type="number" min="0" step="0.01" placeholder="Amount received">
+                <input id="pos-pay-ref" class="form-control form-control-sm" placeholder="Ref / Txn ID" style="display:none;max-width:130px;">
+                <button id="pos-pay-add" class="btn btn-accent px-3 fw-bold" type="button">Add</button>
             </div>
 
             <button id="pos-checkout" class="btn btn-accent w-100" style="height:40px;font-weight:700;" disabled>Complete sale</button>
@@ -170,5 +171,5 @@
 @endsection
 
 @push('scripts')
-<script src="/js/pos.js"></script>
+<script src="/js/pos.js?v={{ time() }}"></script>
 @endpush
