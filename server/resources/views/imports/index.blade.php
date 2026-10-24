@@ -226,11 +226,11 @@
             const line = escapeHtml(r.line);
             const sku = escapeHtml(r.sku);
             const include = `<input class="form-check-input mt-0" type="checkbox" ${r.include ? 'checked' : ''} name="rows[${i}][include]" form="imp-form" value="1">`;
-            const skuInput = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
+            const skuInput = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" ${r.auto_sku ? 'title="SKU was minted here because the sheet left it blank"' : ''} name="rows[${i}][sku]" form="imp-form" value="${sku}">`;
             const lines = `<input type="hidden" name="rows[${i}][line]" form="imp-form" value="${line}">`;
 
             if (kind === 'products') {
-                const name = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Product name">`;
+                const name = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][name]" form="imp-form" value="${escapeHtml(r.name)}" placeholder="Item Name">`;
                 const barcode = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][barcode]" form="imp-form" value="${escapeHtml(r.barcode)}" placeholder="Barcode">`;
                 const category = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][category]" form="imp-form" value="${escapeHtml(r.category)}" placeholder="Category">`;
                 const brand = `<input class="form-control form-control-sm imp-in" style="width:100%;min-width:0" name="rows[${i}][brand]" form="imp-form" value="${escapeHtml(r.brand)}" placeholder="Brand">`;
@@ -239,14 +239,13 @@
                 const tax = `<input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][tax_rate]" form="imp-form" value="${r.tax_rate}">`;
                 const reorder = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][reorder_level]" form="imp-form" value="${r.reorder_level}">`;
                 const qty = `<input type="number" step="0.01" min="0" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
-                const state = r.auto_sku ? '<span class="small text-muted" title="SKU was minted because the sheet left it blank">auto · new</span>' : r.exists ? '<span class="small text-success">exists</span>' : '<span class="small text-danger">new</span>';
-                row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td>${name}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${sell}</td><td>${tax}</td><td>${reorder}</td><td>${qty}</td>`;
+                row = `<td>${include}</td><td>${name}</td><td>${sell}</td><td>${qty}</td><td>${skuInput}</td><td>${barcode}</td><td>${category}</td><td>${brand}</td><td>${cost}</td><td>${tax}</td><td>${reorder}</td>`;
             } else {
                 const qty = `<input type="number" step="0.01" class="form-control form-control-sm imp-in text-end" style="width:100%;min-width:0" name="rows[${i}][quantity]" form="imp-form" value="${r.quantity}">`;
-                row = `<td>${include}</td><td class="small text-muted">${line}</td><td>${skuInput}</td><td class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "unknown SKU — it will be reported as failed"}</td><td>${qty}</td>`;
+                row = `<td>${include}</td><td>${skuInput}</td><td class="small ${r.exists ? "text-muted" : "text-danger"}">${r.exists ? escapeHtml(r.info) : "not in the catalog — this row will be reported as failed"}</td><td>${qty}</td>`;
             }
             row = row + lines;
-            return `<tr class="${r.include ? "" : "opacity-75"}">${row}<td class="text-center small ${r.auto_sku ? 'text-muted' : r.exists ? "text-success" : "text-danger"}">${r.auto_sku ? 'auto · new' : r.exists ? "exists" : kind === "products" ? "new" : "?"}</td></tr>`;
+            return `<tr class="${r.include ? "" : "opacity-75"}">${row}</tr>`;
         }).join('');
 
         // stats bar reuses the existing detail-row look
@@ -268,11 +267,10 @@
             <div class="table-responsive" style="max-height:420px;">
                 <table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;">
                     <thead class="small"><tr>
-                        <th style="width:2.5%;"></th><th class="text-muted" style="width:3.5%;">Line</th><th style="width:8.5%;">SKU</th>
+                        <th style="width:2.5%;"></th>
                         ${kind === 'products'
-                            ? '<th style="width:2.5%;"></th><th class="text-muted" style="width:3.5%;">Line</th><th style="width:8.5%;">SKU</th><th style="width:16%;">Name</th><th style="width:11.5%;">Barcode</th><th style="width:9.5%;">Category</th><th style="width:9.5%;">Brand</th><th class="text-end" style="width:7.5%;">Cost GHS</th><th class="text-end" style="width:7.5%;">Price GHS</th><th class="text-end" style="width:6%;">Tax %</th><th class="text-end" style="width:6.5%;">Reorder</th><th class="text-end" style="width:6%;">Qty</th>'
-                            : '<th style="width:65%;">Product on shelf</th><th class="text-end" style="width:8%;">Qty</th>'}
-                        <th class="text-end small" style="width:5.5%;">State</th>
+                            ? '<th style="width:16.5%;">Item Name</th><th class="text-end" style="width:10%;">Price (GHC)</th><th class="text-end" style="width:7%;">Qty</th><th style="width:10%;">SKU</th><th style="width:11.5%;">Barcode</th><th style="width:10%;">Category</th><th style="width:10%;">Brand</th><th class="text-end" style="width:9%;">Cost Price</th><th class="text-end" style="width:6%;">Tax Rate (%)</th><th class="text-end" style="width:7.5%;">Reorder Level</th>'
+                            : '<th style="width:20%;">SKU</th><th style="width:65%;">Product on shelf</th><th class="text-end" style="width:12.5%;">Qty</th>'}
                     </tr></thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
