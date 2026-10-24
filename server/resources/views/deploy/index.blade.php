@@ -34,25 +34,29 @@
 
     <div class="feature-card p-3 mb-3">
         <div class="fw-bold small mb-2" style="letter-spacing:.5px;color:var(--muted);">WHAT WILL BE SERVED</div>
-        <div class="d-flex flex-wrap gap-4 align-items-center">
-            <div>
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-start align-items-md-center">
+            <div class="min-w-0">
                 @if($state)
-                    <div class="fw-bold">commit <code>{{ substr($state['sha'],0,8) }}</code></div>
-                    <div class="text-muted small">deployed {{ $state['deployed_at'] }} by {{ $state['by'] }}</div>
+                    <div class="fw-bold fs-6">Live Commit: <code>{{ substr($state['sha'],0,8) }}</code></div>
+                    <div class="text-muted small">Deployed {{ $state['deployed_at'] }} by {{ $state['by'] }}</div>
                 @else
                     <div class="fw-bold text-muted">manual zip deploy (no pull state yet)</div>
                 @endif
             </div>
-            <div class="ms-auto text-end">
+            <div class="text-start text-md-end min-w-0 w-100 w-md-auto pt-2 pt-md-0 border-top border-md-0">
                 @if(is_array($remote) && ($remote['sha'] ?? false))
                     <div class="small">
-                        <span class="text-muted">GitHub {{ \App\Http\Controllers\DeployController::BRANCH }}:</span>
-                        <code>{{ substr($remote['sha'],0,8) }}</code>
+                        <div class="d-flex align-items-center gap-1 justify-content-start justify-content-md-end flex-wrap">
+                            <span class="text-muted">GitHub {{ \App\Http\Controllers\DeployController::BRANCH }}:</span>
+                            <code class="fw-bold">{{ substr($remote['sha'],0,8) }}</code>
+                            @if($state && ($remote['sha'] == ($state['sha'] ?? '')))
+                                <span class="badge rounded-pill bg-success text-white">Up to date</span>
+                            @else
+                                <span class="badge rounded-pill bg-warning text-dark">Update available</span>
+                            @endif
+                        </div>
                         @if($remote['message'])
-                            <div class="text-muted" style="max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ $remote['message'] }}">{{ $remote['message'] }}</div>
-                        @endif
-                        @if($state && ($remote['sha'] == ($state['sha'] ?? '')))
-                            <span class="badge rounded-pill ms-1" style="background:var(--accent);color:#fff;">up to date</span>
+                            <div class="text-muted mt-1 small" style="max-width:440px;word-break:break-word;line-height:1.3;" title="{{ $remote['message'] }}">{{ $remote['message'] }}</div>
                         @endif
                     </div>
                 @else
@@ -66,10 +70,16 @@
         <div class="fw-bold small mb-2" style="letter-spacing:.5px;color:var(--muted);">SHIP</div>
         <form method="POST" action="{{ route('deploy.run') }}" id="deploy-form">
             @csrf
-            <div class="d-flex gap-2 flex-wrap align-items-center">
-                <label class="text-muted small">Pin a commit (optional):</label>
-                <input name="pin" placeholder="{{ $remote['sha'] ?? 'latest ' . \App\Http\Controllers\DeployController::BRANCH }}'" class="form-control form-control-sm mono" style="max-width:220px;">
-                <button type="submit" class="btn btn-sm btn-accent" id="deploy-btn">Deploy now</button>
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-sm-auto">
+                    <label class="text-muted small fw-semibold mb-0">Pin a commit (optional):</label>
+                </div>
+                <div class="col-12 col-sm">
+                    <input name="pin" placeholder="{{ $remote['sha'] ?? 'latest ' . \App\Http\Controllers\DeployController::BRANCH }}" class="form-control form-control-sm mono w-100" style="max-width:340px;">
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <button type="submit" class="btn btn-sm btn-accent w-100 w-sm-auto px-3" id="deploy-btn">Deploy now</button>
+                </div>
             </div>
         </form>
 
