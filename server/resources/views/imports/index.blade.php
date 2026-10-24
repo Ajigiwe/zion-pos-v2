@@ -176,7 +176,9 @@
     // mandatory when nothing is staged yet
     form.addEventListener('submit', (e) => {
         if (draft) {
-            const checked = form.querySelectorAll('input[name$="[include]"]:checked').length;
+            // the grid lives OUTSIDE the form element (form="imp-form"
+            // association), so count across the whole document
+            const checked = document.querySelectorAll('#imp-preview input[name$="[include]"]:checked').length;
             if (!checked) { e.preventDefault(); flashWarn('Nothing ticked in the waiting room — pick rows or untick nothing to import at all.', 'warn'); return; }
             return;
         }
