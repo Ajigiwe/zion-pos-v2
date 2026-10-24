@@ -7,10 +7,29 @@
 @php($feed = max(10, min(120, (float) ($store['bottom_feed_space'] ?? 50))))
 @php($currency = $store['currency'] ?? 'GHS')
 @php($tels = array_values(array_filter(array_map('trim', explode('/', $store['phone'] ?? '')))))
+<style>
+    @page { size: auto; margin: 0mm !important; }
+    .receipt {
+        font-family: 'Consolas', 'Courier New', monospace;
+        margin: 0 auto;
+        font-size: 12px;
+        line-height: 1.35;
+        color: #000 !important;
+        font-weight: 700;
+        background: #fff;
+    }
+    .receipt-divider {
+        border-top: 1.5px dashed #000 !important;
+        margin: 5px 0 !important;
+        display: block !important;
+        width: 100% !important;
+        height: 0 !important;
+    }
+</style>
 <div class="receipt" style="width:{{ $w }}mm;">
     @if($r['needs_review'] ?? false)
         <div style="text-align:center;font-weight:800;font-size:12px;color:#000;">⚠ OFFLINE SALE — PENDING REVIEW</div>
-        <div class="receipt-divider"></div>
+        <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
     @endif
 
     {{-- store letterhead --}}
@@ -30,7 +49,7 @@
             <div style="font-size:11.5px;font-weight:700;margin-top:2px;line-height:1.25;">{{ $store['header_custom_text'] }}</div>
         @endif
     </div>
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- document meta --}}
     <div style="font-size:11.5px;font-weight:700;display:flex;justify-content:space-between;flex-wrap:wrap;">
@@ -43,7 +62,7 @@
     @if(($store['show_cashier_name'] ?? true) && ! empty($r['cashier']))
         <div style="font-size:11.5px;font-weight:700;">Cashier: {{ $r['cashier'] }}</div>
     @endif
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- column headers --}}
     <div style="display:flex;justify-content:space-between;font-weight:900;font-size:12px;">
@@ -51,7 +70,7 @@
         <span style="flex-grow:1;padding:0 4px;">ITEM DESCRIPTION</span>
         <span style="text-align:right;">AMOUNT</span>
     </div>
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- items --}}
     @php($totalItemCount = 0)
@@ -98,14 +117,14 @@
             </div>
         @endif
     </div>
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- total due --}}
     <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;letter-spacing:.3px;">
         <span>TOTAL DUE</span>
         <span>{{ $currency }} {{ number_format((float) (($r['kind'] ?? '') === 'test' ? 40 : ($r['total'] ?? 0)), 2) }}</span>
     </div>
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- payments --}}
     @if($store['show_payment_breakdown'] ?? true)
@@ -131,7 +150,7 @@
             <span>{{ $currency }} {{ number_format((float) $r['change'], 2) }}</span>
         </div>
     @endif
-    <div class="receipt-divider"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
 
     {{-- total items summary --}}
     <div class="receipt-center" style="font-size:12px;font-weight:700;margin:2px 0;">
@@ -152,6 +171,6 @@
             <div class="barcode-code" style="font-size:11.5px;font-weight:800;letter-spacing:1px;margin-top:2px;">{{ $r['number'] }}</div>
         </div>
     @endif
-    <div class="receipt-divider" style="margin-top:6px;"></div>
+    <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:6px 0;width:100%;height:0;"></div>
     <div style="height:{{ $feed * 0.3 }}mm;"></div>
 </div>

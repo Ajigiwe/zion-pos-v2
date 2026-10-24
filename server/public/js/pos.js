@@ -460,34 +460,34 @@
                     ${store.show_store_phone !== '0' && store.phone ? `<div style="font-size:12px;font-weight:700;">Tel: ${escapeHtml(store.phone)}</div>` : ''}
                     ${store.header_custom_text ? `<div style="font-size:11.5px;font-weight:700;margin-top:2px;line-height:1.25;">${escapeHtml(store.header_custom_text)}</div>` : ''}
                 </div>
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 <div style="font-size:11.5px;font-weight:700;display:flex;justify-content:space-between;flex-wrap:wrap;">
                     <span>RECEIPT: ${escapeHtml(sale.receipt_number)}</span>
                     <span>${escapeHtml(sale.created_at || '')}</span>
                 </div>
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 <div style="display:flex;justify-content:space-between;font-weight:900;font-size:12px;">
                     <span style="width:16%;">QTY</span>
                     <span style="flex-grow:1;padding:0 4px;">ITEM DESCRIPTION</span>
                     <span style="text-align:right;">AMOUNT</span>
                 </div>
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 ${rows}
                 <div style="margin-top:4px;">
                     <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>Subtotal</span><span>${CUR} ${Number(sale.subtotal).toFixed(2)}</span></div>
                     ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>Discount</span><span>- ${CUR} ${Number(sale.discount).toFixed(2)}</span></div>` : ''}
                     ${store.show_tax !== '0' && sale.tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>VAT incl.</span><span>${CUR} ${Number(sale.tax).toFixed(2)}</span></div>` : ''}
                 </div>
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;letter-spacing:.3px;"><span>TOTAL DUE</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 ${pays}
                 ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
                 ${(sale.offline ? '<div style="text-align:center;font-weight:800;font-size:12px;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
-                <div class="receipt-divider"></div>
+                <div class="receipt-divider" style="border-top:1.5px dashed #000;margin:5px 0;width:100%;height:0;"></div>
                 <div class="receipt-center" style="font-size:12px;font-weight:700;margin:2px 0;">Total Items: ${trimNum(totalQty)}</div>
                 <div class="receipt-center" style="white-space:pre-line;font-size:11.5px;font-weight:700;line-height:1.3;margin-top:2px;">${escapeHtml(store.footer_message || '')}</div>
-                ${store.show_barcode !== '0' ? `<div class="receipt-divider" style="margin-top:6px;"></div><div style="height:8mm;"></div>` : ''}
+                ${store.show_barcode !== '0' ? `<div class="receipt-divider" style="border-top:1.5px dashed #000;margin:6px 0;width:100%;height:0;"></div><div style="height:8mm;"></div>` : ''}
             </div>`);
     }
 
@@ -508,10 +508,41 @@
         const doc = frame.contentWindow.document;
         doc.open();
         doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-            <link rel="stylesheet" href="/css/app.css">
+            <title></title>
             <style>
-                @page { margin: 0; size: auto; }
-                body { margin: 0; padding: 0; background: #fff; }
+                @page { size: auto; margin: 0mm !important; }
+                @page :header { display: none; }
+                @page :footer { display: none; }
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #fff !important;
+                    color: #000 !important;
+                }
+                .receipt {
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    margin: 0 auto;
+                    font-size: 12px;
+                    line-height: 1.35;
+                    color: #000 !important;
+                    background: #fff;
+                    padding: 4px 6px;
+                    font-weight: 700;
+                    -webkit-font-smoothing: antialiased;
+                    text-rendering: geometricPrecision;
+                }
+                .receipt * { color: #000 !important; box-sizing: border-box; }
+                .receipt .receipt-center { text-align: center; }
+                .receipt hr, .receipt .receipt-divider {
+                    border: none !important;
+                    border-top: 1.5px dashed #000 !important;
+                    margin: 5px 0 !important;
+                    display: block !important;
+                    width: 100% !important;
+                    height: 0 !important;
+                }
+                .receipt .barcode-wrap { text-align: center; margin-top: 6px; }
+                .receipt .barcode-code { font-size: 11.5px; font-weight: 800; letter-spacing: 1px; }
             </style>
         </head><body><div id="receipt-print">${inner}</div></body></html>`);
         doc.close();
@@ -522,7 +553,7 @@
             } catch (e) {
                 console.error('Receipt print failed:', e);
             }
-        }, 250);
+        }, 150);
     }
 
     // ---------- history mode ----------
