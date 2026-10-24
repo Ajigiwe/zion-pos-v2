@@ -439,41 +439,66 @@
         // Offline / fallback: build the receipt locally (Flutter parity skeleton).
         const store = window.POS_STORE || {};
         const rows = sale.items.map((i) =>
-            `<div style="font-weight:600;">${escapeHtml(i.name)}</div>
-             <div style="display:flex;justify-content:space-between;"><span>${trimNum(i.quantity)} x ${CUR} ${i.unit_price.toFixed(2)}</span><span>${CUR} ${(i.unit_price * i.quantity).toFixed(2)}</span></div>`).join('');
-        const pays = sale.payments.map((p) => `<div style="display:flex;justify-content:space-between;"><span>${(p.method || '').replace('_', ' ').toUpperCase()}:</span><span>${CUR} ${Number(p.amount).toFixed(2)}</span></div>`).join('');
+            `<div style="font-weight:700;font-size:12px;">${escapeHtml(i.name)}</div>
+             <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;"><span>${trimNum(i.quantity)} x ${CUR} ${i.unit_price.toFixed(2)}</span><span style="font-weight:700;">${CUR} ${(i.unit_price * i.quantity).toFixed(2)}</span></div>`).join('');
+        const pays = sale.payments.map((p) => `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>${(p.method || '').replace('_', ' ').toUpperCase()}:</span><span>${CUR} ${Number(p.amount).toFixed(2)}</span></div>`).join('');
         printHtml(`
             <div class="receipt receipt-center">
-                ${store.show_store_name !== '0' ? `<div style="font-weight:800;">${escapeHtml(store.name || '').toUpperCase()}</div>` : ''}
-                ${store.show_store_address !== '0' && store.address ? `<div>${escapeHtml(store.address)}</div>` : ''}
-                ${store.show_store_phone !== '0' && store.phone ? `<div>Tel: ${escapeHtml(store.phone)}</div>` : ''}
-                ${store.header_custom_text ? `<div style="font-size:10px;">${escapeHtml(store.header_custom_text)}</div>` : ''}
+                ${store.show_store_name !== '0' ? `<div style="font-weight:900;font-size:15px;letter-spacing:.3px;text-transform:uppercase;line-height:1.2;">${escapeHtml(store.name || '').toUpperCase()}</div>` : ''}
+                ${store.show_store_address !== '0' && store.address ? `<div style="font-size:11.5px;font-weight:600;margin-top:2px;">${escapeHtml(store.address)}</div>` : ''}
+                ${store.show_store_phone !== '0' && store.phone ? `<div style="font-size:11.5px;font-weight:600;">Tel: ${escapeHtml(store.phone)}</div>` : ''}
+                ${store.header_custom_text ? `<div style="font-size:11px;font-weight:600;margin-top:2px;">${escapeHtml(store.header_custom_text)}</div>` : ''}
             </div>
-            <div class="solid-rule" style="margin:4px 0;"></div>
-            <div style="display:flex;justify-content:space-between;"><b>RECEIPT: ${escapeHtml(sale.receipt_number)}</b></div>
-            <div>${escapeHtml(sale.created_at || '')}</div>
+            <div class="solid-rule" style="margin:5px 0;"></div>
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><b>RECEIPT: ${escapeHtml(sale.receipt_number)}</b></div>
+            <div style="font-size:11.5px;font-weight:600;">${escapeHtml(sale.created_at || '')}</div>
             <hr>
             ${rows}
             <hr>
-            <div style="display:flex;justify-content:space-between;"><span>Subtotal:</span><span>${CUR} ${Number(sale.subtotal).toFixed(2)}</span></div>
-            ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Discount:</span><span>- ${CUR} ${Number(sale.discount).toFixed(2)}</span></div>` : ''}
-            ${store.show_tax !== '0' && sale.tax > 0 ? `<div style="display:flex;justify-content:space-between;"><span>VAT incl.:</span><span>${CUR} ${Number(sale.tax).toFixed(2)}</span></div>` : ''}
-            <div style="display:flex;justify-content:space-between;font-weight:800;"><span>TOTAL:</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>Subtotal:</span><span>${CUR} ${Number(sale.subtotal).toFixed(2)}</span></div>
+            ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>Discount:</span><span>- ${CUR} ${Number(sale.discount).toFixed(2)}</span></div>` : ''}
+            ${store.show_tax !== '0' && sale.tax > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;"><span>VAT incl.:</span><span>${CUR} ${Number(sale.tax).toFixed(2)}</span></div>` : ''}
+            <div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;margin-top:2px;"><span>TOTAL:</span><span>${CUR} ${Number(sale.total).toFixed(2)}</span></div>
             ${pays}
-            ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:700;"><span>Change:</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
-            ${(sale.offline ? '<div style="text-align:center;font-weight:700;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
+            ${sale.change > 0 ? `<div style="display:flex;justify-content:space-between;font-weight:800;font-size:12px;"><span>Change:</span><span>${CUR} ${Number(sale.change).toFixed(2)}</span></div>` : ''}
+            ${(sale.offline ? '<div style="text-align:center;font-weight:800;font-size:12px;">⚠ OFFLINE SALE — PENDING REVIEW</div>' : '')}
             <hr>
-            <div class="receipt-center" style="white-space:pre-line;font-size:9.5px;">${escapeHtml(store.footer_message || '')}</div>
+            <div class="receipt-center" style="white-space:pre-line;font-size:11px;font-weight:600;line-height:1.3;">${escapeHtml(store.footer_message || '')}</div>
             ${store.show_barcode !== '0' ? `<div style="height:8mm;"></div>` : ''}`);
     }
 
     function printHtml(inner) {
-        const w = window.open('', '_blank', 'width=420,height=600');
-        if (!w) { flash('Allow pop-ups to print receipts.', 'warn'); return; }
-        w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/css/app.css"></head>
-            <body style="background:#fff;margin:0;padding:0;"><div id="receipt-print">${inner}</div>
-            <script>setTimeout(function(){window.print();},200);<\/script></body></html>`);
-        w.document.close();
+        let frame = document.getElementById('receipt-print-frame');
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'receipt-print-frame';
+            frame.style.position = 'fixed';
+            frame.style.right = '0';
+            frame.style.bottom = '0';
+            frame.style.width = '0';
+            frame.style.height = '0';
+            frame.style.border = '0';
+            frame.style.opacity = '0';
+            document.body.appendChild(frame);
+        }
+        const doc = frame.contentWindow.document;
+        doc.open();
+        doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+            <link rel="stylesheet" href="/css/app.css">
+            <style>
+                @page { margin: 0; size: auto; }
+                body { margin: 0; padding: 0; background: #fff; }
+            </style>
+        </head><body><div id="receipt-print">${inner}</div></body></html>`);
+        doc.close();
+        setTimeout(function () {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch (e) {
+                console.error('Receipt print failed:', e);
+            }
+        }, 250);
     }
 
     // ---------- history mode ----------

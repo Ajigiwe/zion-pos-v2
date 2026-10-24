@@ -386,24 +386,52 @@ html[data-bs-theme="dark"] .change-box .amount { color: #C8E6C9; }
 .scan-ready { color: rgba(255,255,255,.9); font-size: 12px; font-weight: 700; letter-spacing: 1.2px; }
 
 /* Receipt / thermal */
+@page {
+    margin: 0;
+    size: auto;
+}
+
 .receipt {
-    font-family: ui-monospace, 'Courier New', monospace;
-    margin: 0 auto; font-size: 12px; line-height: 1.35;
-    color: #000; background: #fff; padding: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0 auto;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #000 !important;
+    background: #fff;
+    padding: 4px 6px;
+    font-weight: 600;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+}
+.receipt * {
+    color: #000 !important;
+    box-sizing: border-box;
 }
 .receipt .receipt-center { text-align: center; }
-.receipt .solid-rule { border-top: 2.4px solid #000; }
-.receipt hr { border: none; border-top: 1px dashed #000; }
+.receipt .solid-rule { border-top: 2.5px solid #000; margin: 4px 0; }
+.receipt hr { border: none; border-top: 1.5px dashed #000; margin: 5px 0; }
 .receipt .barcode-wrap { text-align: center; }
-.receipt .barcode-code { font-size: 9px; letter-spacing: 1px; }
+.receipt .barcode-code { font-size: 10px; font-weight: 700; letter-spacing: 1px; }
 .receipt .signature-line {
-    margin-top: 14px; border-top: 1px solid #000; width: 70%;
-    margin-inline: auto; text-align: center; font-size: 10px; padding-top: 2px;
+    margin-top: 14px; border-top: 1.5px solid #000; width: 70%;
+    margin-inline: auto; text-align: center; font-size: 11px; font-weight: 600; padding-top: 2px;
 }
 @media print {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
     body * { visibility: hidden; }
     #receipt-print, #receipt-print * { visibility: visible; }
-    #receipt-print { position: absolute; left: 0; top: 0; margin: 0; padding-top: 0; }
+    #receipt-print {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
     .no-print { display: none !important; }
 }
 

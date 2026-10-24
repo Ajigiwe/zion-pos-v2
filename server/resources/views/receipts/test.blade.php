@@ -6,10 +6,14 @@
     <title>Print test — {{ $store['name'] }}</title>
     <link rel="stylesheet" href="/css/app.css">
     <style>
-        body { background: #fff; margin: 0; padding: 16px; font-family: system-ui, sans-serif; }
+        @page { margin: 0; size: auto; }
+        body { background: #fff; margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         .print-hint { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 8px; }
         .print-hint button { padding: 6px 18px; }
-        @media print { .no-print { display: none !important; } }
+        @media print {
+            body { margin: 0 !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
