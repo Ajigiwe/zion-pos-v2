@@ -82,6 +82,11 @@
                 </div>
             </div>
         </form>
+        <form method="POST" action="{{ route('deploy.finalize') }}" class="mt-2 d-flex align-items-center gap-2">
+            @csrf
+            <button class="btn btn-sm btn-outline-accent">Run migrations &amp; clear caches</button>
+            <span class="text-muted small">Apply new schema to the live database after a deploy — use once after each release that ships migrations.</span>
+        </form>
 
         @push('scripts')
         <script>

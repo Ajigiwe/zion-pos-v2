@@ -135,4 +135,5 @@ Route::middleware('auth')->group(function () {
     // Developer self-deploy (repository is the source of truth; superadmin only)
     Route::get('deploy', [DeployController::class, 'index'])->middleware('role:superadmin')->name('deploy.index');
     Route::post('deploy', [DeployController::class, 'run'])->middleware('role:superadmin')->name('deploy.run');
+    Route::post('deploy/finalize', [DeployController::class, 'finalize'])->middleware('role:superadmin')->name('deploy.finalize');
 });

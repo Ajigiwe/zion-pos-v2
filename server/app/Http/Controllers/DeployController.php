@@ -178,11 +178,63 @@ class DeployController extends Controller
         @unlink($zipPath);
         $steps[] = 'cleanup done (old tree + zip removed)';
 
+        // 8. finalize the new release: apply pending migrations and clear
+        //    compiled caches. Executed in-process against the freshly swapped
+        //    tree — the migrator reads database/migrations fresh from disk, and
+        //    the config/view caches it clears are files on disk too. Without
+        //    this step every schema-bound release served SQLSTATE 500s until
+        //    migrations were applied by hand.
+        try {
+            $out = \Artisan::call('migrate', ['--force' => true]);
+            $steps[] = 'migrate: '.trim(str_replace(["\r", "\n"], ' ', \Artisan::output()) ?: 'nothing to migrate');
+        } catch (\Throwable $e) {
+            $steps[] = 'MIGRATE FAILED — data intact, app may serve 500s until migrations are applied: '.$e->getMessage();
+            Log::error('deploy: migrate failed for ' . $sha . ': ' . $e->getMessage());
+        }
+        try {
+            \Artisan::call('optimize:clear');
+            $steps[] = 'caches cleared (config/routes/views/events)';
+        } catch (\Throwable) {
+            $steps[] = 'note: cache clear skipped';
+        }
+
         Log::info('deploy: live commit ' . $sha . ' deployed by ' . auth()->user()->username);
         return back()->with('deploy_result', $state)->with('deploy_steps', $steps);
     }
 
     /* ---------- helpers ---------- */
+
+    /**
+     * Post-release kicker: apply pending migrations and clear compiled caches
+     * against the LIVE tree. Exists because the deploy swap runs in the old
+     * app instance — a migrate step added to the new release only executes on
+     * the deploy AFTER the one that ships it, and a schema-behind release 500s.
+     */
+    public function finalize()
+    {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403);
+
+        $steps = [];
+        try {
+            \Artisan::call('migrate', ['--force' => true]);
+            $out = trim(\Artisan::output());
+            $steps[] = 'migrate: '.str_replace(["\r", "\n"], ' · ', $out !== '' ? $out : 'nothing to migrate');
+        } catch (\Throwable $e) {
+            $steps[] = 'MIGRATE FAILED: '.$e->getMessage();
+            Log::error('finalize: migrate failed: '.$e->getMessage());
+
+            return back()->with('deploy_error', 'Migrate failed — '.$e->getMessage())->with('deploy_steps', $steps);
+        }
+        try {
+            \Artisan::call('optimize:clear');
+            $steps[] = 'caches cleared';
+        } catch (\Throwable) {
+            $steps[] = 'note: cache clear skipped';
+        }
+
+        return back()->with('deploy_result', ['sha' => readState()['sha'] ?? null, 'ran' => 'finalize'])
+            ->with('deploy_steps', $steps);
+    }
 
     private function readState(): ?array
     {
