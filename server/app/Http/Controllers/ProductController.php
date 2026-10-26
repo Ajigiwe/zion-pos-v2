@@ -107,12 +107,14 @@ class ProductController extends Controller
 
     private function validated(Request $request, ?Product $product = null): array
     {
+        // SKU/barcode uniqueness is per shop (multi-shop): a code may exist in
+        // another shop, never twice in this one.
         $data = $request->validate([
-            'sku' => ['required', 'string', 'max:64', Rule::unique('products')->ignore($product?->id)],
-            'barcode' => ['nullable', 'string', 'max:64'],
+            'sku' => ['required', 'string', 'max:64', Rule::unique('products')->where('shop_id', shop_id())->ignore($product?->id)],
+            'barcode' => ['nullable', 'string', 'max:64', Rule::unique('products')->where('shop_id', shop_id())->ignore($product?->id)],
             'name' => ['required', 'string', 'max:255'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'brand_id' => ['nullable', 'exists:brands,id'],
+            'category_id' => ['nullable', Rule::exists('categories', 'id')->where('shop_id', shop_id())],
+            'brand_id' => ['nullable', Rule::exists('brands', 'id')->where('shop_id', shop_id())],
             'description' => ['nullable', 'string'],
             'cost_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
