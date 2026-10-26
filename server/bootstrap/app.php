@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         ]);
+
+        // multi-shop context: runs after StartSession/auth for every web request
+        $middleware->web([\App\Http\Middleware\BootShopContext::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

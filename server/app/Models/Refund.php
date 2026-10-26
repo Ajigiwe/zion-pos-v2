@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToShop;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Refund extends Model
 {
+    use BelongsToShop;
+
     protected $fillable = [
         'refund_number', 'idempotency_key', 'uuid', 'original_sale_id',
         'cashier_id', 'refund_method', 'amount', 'reason', 'status',

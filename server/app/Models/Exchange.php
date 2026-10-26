@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToShop;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Exchange extends Model
 {
+    use BelongsToShop;
+
     protected $fillable = [
         'exchange_number', 'original_sale_id', 'refund_id',
         'replacement_sale_id', 'return_total', 'replacement_total', 'difference',

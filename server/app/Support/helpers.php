@@ -1,6 +1,23 @@
 <?php
 
 use App\Models\Setting;
+use App\Support\ShopContext;
+
+if (! function_exists('current_shop')) {
+    /** The shop this request operates in (null on console jobs). */
+    function current_shop(): ?\App\Models\Shop
+    {
+        return ShopContext::shop();
+    }
+}
+
+if (! function_exists('shop_id')) {
+    /** Active shop id (null on console jobs — shop-scoped queries then run unscoped). */
+    function shop_id(): ?int
+    {
+        return ShopContext::id();
+    }
+}
 
 if (! function_exists('money')) {
     /** Format an amount with the configured currency symbol. */

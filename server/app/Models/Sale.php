@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToShop;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Sale extends Model
 {
+    use BelongsToShop;
+
     protected $fillable = [
         'receipt_number', 'idempotency_key', 'uuid', 'cashier_id', 'till_id',
         'subtotal', 'discount', 'tax', 'total', 'payment_status', 'sale_status',

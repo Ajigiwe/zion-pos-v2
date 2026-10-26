@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToShop;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class Product extends Model
 {
+    use BelongsToShop;
+
     protected $fillable = [
         'sku', 'barcode', 'name', 'category_id', 'brand_id', 'description',
         'cost_price', 'selling_price', 'tax_rate', 'reorder_level',

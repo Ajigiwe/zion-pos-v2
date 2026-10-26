@@ -14,6 +14,12 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
+    /** Shops this staff member is allowed to operate in (multi-shop feature). */
+    public function shops(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Shop::class, 'user_shop')->withTimestamps();
+    }
+
     /**
      * The attributes that are mass assignable.
      *
