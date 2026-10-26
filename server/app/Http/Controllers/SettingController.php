@@ -213,6 +213,36 @@ class SettingController extends Controller
         return back()->with('error', 'Wipe failed: '.$result['error']);
     }
 
+    /** Multi-shop: wipe ONE shop's transactional data; other shops untouched. */
+    public function wipeShop(Request $request)
+    {
+        $data = $request->validate([
+            'shop_id' => ['required', 'integer'],
+            'confirm' => ['required', 'accepted'],
+        ]);
+
+        $shop = \App\Models\Shop::find($data['shop_id']);
+
+        if (! $shop || $shop->id === \App\Models\Shop::main()->id) {
+            return back()->with('error', 'Wipe a shop from here only when it is an ordinary shop — the main shop is cleared by the global wipe.');
+        }
+
+        if (\DB::table('products')->where('shop_id', $shop->id)->count() + \DB::table('sales')->where('shop_id', $shop->id)->count() === 0) {
+            return back()->with('error', "'{$shop->name}' has no products or sales to wipe.");
+        }
+
+        $result = $this->backups->wipeShop($shop);
+
+        if ($result['ok']) {
+            AuditLog::record('WIPE_SHOP', auth()->id(), 'shop', $shop->id, "Shop '{$shop->name}' transactional data wiped (backup: ".basename($result['file']).')');
+
+            return redirect()->route('settings.index')->with('success',
+                "Backup saved. Shop '{$shop->name}' wiped — ".basename($result['file']));
+        }
+
+        return back()->with('error', 'Wipe failed: '.$result['error']);
+    }
+
     public function backup(Request $request)
     {
         $result = $this->backups->create();

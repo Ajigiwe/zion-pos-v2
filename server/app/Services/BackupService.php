@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Process;
+use App\Models\Shop;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -166,6 +167,46 @@ class BackupService
                 \DB::table($table)->delete(); // DELETE keeps sessions/auth rows intact
             }
         }
+        if ($keepForeign) {
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+
+        return ['ok' => true, 'file' => $backup['file']];
+    }
+
+    /**
+     * Multi-shop: wipe ONE shop's transactional data (catalog, stock, sales,
+     * refunds, exchanges, imports) without touching any other shop. A full
+     * backup is ALWAYS written first. Users, roles, settings and the shop
+     * record itself stay; the shop keeps its receipt-counter series intact
+     * unless explicitly cleared, so numbering stays unique.
+     *
+     * Order matters: exchanges → refunds → sales (children cascade), then the
+     * catalog and ledger. Audit logs deliberately survive (history trail).
+     */
+    public function wipeShop(Shop $shop): array
+    {
+        $backup = $this->create();
+        if (! $backup['ok']) {
+            return ['ok' => false, 'error' => 'Safety backup failed — data left untouched: '.$backup['error']];
+        }
+
+        $shopTables = [
+            'exchanges', 'refunds', 'sales', 'stock_movements', 'products',
+            'categories', 'brands', 'suppliers', 'import_batches',
+        ];
+
+        $keepForeign = $this->disableForeignKeyChecks();
+        foreach ($shopTables as $table) {
+            if (\Schema::hasTable($table) && \Schema::hasColumn($table, 'shop_id')) {
+                \DB::table($table)->where('shop_id', $shop->id)->delete();
+            }
+        }
+
+        // sale_items/payments cascade from sales (FK actions still run with
+        // checks off); refunds/exchanges were deleted above so no dangling
+        // references survive.
+
         if ($keepForeign) {
             \DB::statement('SET FOREIGN_KEY_CHECKS=1');
         }

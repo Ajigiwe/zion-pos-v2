@@ -39,7 +39,7 @@
         <div class="brand d-flex align-items-center gap-2 px-3 py-3">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" class="text-accent"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
             <div class="brand-text">
-                <div class="brand-name text-truncate">{{ store_info()['name'] }}</div>
+                <div class="brand-name text-truncate" title="{{ current_shop()?->name ?? store_info()['name'] }}">{{ current_shop()?->name ?? store_info()['name'] }}</div>
                 <div class="brand-sub">Point of Sale</div>
             </div>
         </div>
@@ -87,6 +87,12 @@
                     <span class="nav-label">Reports</span>
                 </a>
             @endcan
+            @role('superadmin')
+                <a href="{{ route('shops.index') }}" class="nav-link {{ request()->routeIs('shops.*') ? 'active' : '' }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9 12 3l9 6h-1v10H4V9H3zm5 10v-6h3v6H8zm5 0v-6h3v6h-3z"/></svg>
+                    <span class="nav-label">Shops</span>
+                </a>
+            @endrole
             @can('users.manage')
                 <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zm2 1a6 6 0 1 1-12 0 6 6 0 0 1 12 0zM2 21c0-3 4-4 10-4s10 1 10 4v1H2v-1z"/></svg>
@@ -139,6 +145,30 @@
                     </a>
                 </div>
                 @yield('page_actions')
+                @php($switchShops = auth()->user()->hasRole('superadmin')
+                    ? \App\Models\Shop::query()->ordered()->get()
+                    : auth()->user()->shops()->where('is_active', true)->orderBy('id')->get())
+                @if($switchShops->count() > 1)
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" title="Switch shop">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9 12 3l9 6h-1v10H4V9H3zm5 10v-6h3v6H8zm5 0v-6h3v6h-3z"/></svg>
+                            <span class="text-truncate" style="max-width:140px;">{{ current_shop()?->name }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            @foreach($switchShops as $s)
+                                <li>
+                                    <form method="POST" action="{{ route('shops.switch') }}">
+                                        @csrf
+                                        <input type="hidden" name="shop_id" value="{{ $s->id }}">
+                                        <button type="submit" class="dropdown-item {{ $s->id === current_shop()?->id ? 'active' : '' }} {{ $s->is_active ? '' : 'text-muted' }}">
+                                            {{ $s->name }} <span class="text-muted small">{{ $s->code }}</span>{{ $s->is_active ? '' : ' · inactive' }}
+                                        </button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                         {{ auth()->user()->name }} <span class="text-muted small">({{ auth()->user()->role_label() }})</span>

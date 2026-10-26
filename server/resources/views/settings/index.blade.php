@@ -362,6 +362,9 @@
                     </form>
                     <button class="btn btn-sm btn-outline-accent" data-bs-toggle="modal" data-bs-target="#restoreModal">Restore from backup…</button>
                     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#wipeModal">Wipe all data…</button>
+                    @role('superadmin')
+                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#wipeShopModal">Wipe one shop…</button>
+                    @endrole
                 </div>
                 <div class="table-responsive">
                 <table class="table table-sm small mb-0">
@@ -555,6 +558,35 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button class="btn btn-danger">Backup &amp; Wipe All Data</button>
+            </div>
+        </div>
+    </form></div>
+</div>
+
+{{-- Wipe ONE shop modal (superadmin, multi-shop) --}}
+<div class="modal fade" id="wipeShopModal" tabindex="-1">
+    <div class="modal-dialog"><form method="POST" action="{{ route('settings.wipeShop') }}">
+        @csrf
+        <div class="modal-content">
+            <div class="modal-header"><h6 class="modal-title text-danger">Wipe one shop's data</h6></div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Erases a single shop's products, categories, stock history, sales, refunds and imports. Other shops keep everything; staff, settings and the shop record stay. A full backup is written first.</div>
+                <label class="form-label small fw-semibold">Shop</label>
+                <select name="shop_id" class="form-select form-select-sm" required>
+                    @foreach(\App\Models\Shop::query()->ordered()->get() as $s)
+                        @if($s->id !== \App\Models\Shop::main()->id)
+                            <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->code }}){{ $s->is_active ? '' : ' — inactive' }}</option>
+                        @endif
+                    @endforeach
+                </select>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="wipe-shop-confirm" name="confirm" value="1" required>
+                    <label class="form-check-label small text-danger" for="wipe-shop-confirm">I understand this permanently erases the selected shop's data.</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger">Backup &amp; Wipe This Shop</button>
             </div>
         </div>
     </form></div>

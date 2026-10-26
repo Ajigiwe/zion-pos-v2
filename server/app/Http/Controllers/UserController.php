@@ -61,6 +61,7 @@ class UserController extends Controller
             'is_active' => true,
         ]);
         $user->assignRole($data['role']);
+        $this->syncShops($request, $user);
 
         AuditLog::record('USER_CREATE', auth()->id(), 'user', $user->id, "{$user->name} joined as {$data['role']}");
 
@@ -94,6 +95,13 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $user->update(['password' => Hash::make($request->input('password'))]);
             AuditLog::record('PASSWORD_RESET', auth()->id(), 'user', $user->id, $user->name);
+        }
+
+        $before = $user->shops->pluck('id')->sort()->values()->all();
+        $this->syncShops($request, $user);
+        $after = collect($request->input('shops', []))->map(fn ($v) => (int) $v)->sort()->values()->all();
+        if ($before !== $after) {
+            AuditLog::record('USER_SHOPS', auth()->id(), 'user', $user->id, $user->name.' → shops '.implode(',', $after ?: ['main']));
         }
 
         return redirect()->route('users.index')->with('success', "{$user->name} updated.");
@@ -152,7 +160,22 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
             'role' => ['required', Rule::in(array_keys(self::ROLES))],
             'password' => [Rule::requiredIf($user?->exists === false), 'nullable', 'string', 'min:6'],
+            'shops' => ['nullable', 'array'],
+            'shops.*' => ['integer', Rule::exists('shops', 'id')],
         ]);
+    }
+
+    /** Shop memberships decide where this account can see products/stock/sales. */
+    private function syncShops(Request $request, User $user): void
+    {
+        $ids = collect($request->input('shops', []))->map(fn ($v) => (int) $v)->unique()->all();
+
+        if ($ids === [] && ! $user->hasRole('superadmin')) {
+            // never leave a staff member stranded with no shop
+            $ids = [\App\Models\Shop::main()->id];
+        }
+
+        $user->shops()->sync($ids);
     }
 
     /** Superadmin-only per-user permission grants (added on top of the role). */

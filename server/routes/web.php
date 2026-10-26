@@ -14,6 +14,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TaxonomyController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,7 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/backups/{file}', [SettingController::class, 'downloadBackup'])->middleware('permission:settings.manage')->name('settings.backups.download');
     Route::post('settings/restore', [SettingController::class, 'restore'])->middleware('permission:settings.manage')->name('settings.restore');
     Route::post('settings/wipe', [SettingController::class, 'wipe'])->middleware('permission:settings.manage')->name('settings.wipe');
+    Route::post('settings/wipe-shop', [SettingController::class, 'wipeShop'])->middleware('role:superadmin')->name('settings.wipeShop');
 
     // Own account — every signed-in user can change their own password
     Route::put('account/password', [SettingController::class, 'changePassword'])->name('account.password');
@@ -121,6 +123,14 @@ Route::middleware('auth')->group(function () {
     Route::get('api/snapshot', [\App\Http\Controllers\SyncController::class, 'snapshot'])->name('api.snapshot');
     Route::post('api/sales', [\App\Http\Controllers\SyncController::class, 'storeSale'])->name('api.sales');
     Route::get('api/ping', [\App\Http\Controllers\SyncController::class, 'ping'])->name('api.ping');
+
+    // Shops (superadmin management + everyone's session switcher)
+    Route::get('shops', [ShopController::class, 'index'])->middleware('role:superadmin')->name('shops.index');
+    Route::post('shops', [ShopController::class, 'store'])->middleware('role:superadmin')->name('shops.store');
+    Route::put('shops/{shop}', [ShopController::class, 'update'])->middleware('role:superadmin')->name('shops.update');
+    Route::post('shops/{shop}/toggle', [ShopController::class, 'toggle'])->middleware('role:superadmin')->name('shops.toggle');
+    Route::post('shops/{shop}/staff', [ShopController::class, 'staff'])->middleware('role:superadmin')->name('shops.staff');
+    Route::post('shops/switch', [ShopController::class, 'switchShop'])->name('shops.switch');
 
     // Developer self-deploy (repository is the source of truth; superadmin only)
     Route::get('deploy', [DeployController::class, 'index'])->middleware('role:superadmin')->name('deploy.index');

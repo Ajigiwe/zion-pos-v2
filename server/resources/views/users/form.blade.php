@@ -50,6 +50,21 @@
                     </div>
                 </div>
             @endif
+            <div class="col-12">
+                <label class="form-label small">Shops this staff member can operate in *</label>
+                <div class="d-flex flex-wrap gap-3">
+                    @forelse(\App\Models\Shop::query()->ordered()->get() as $shop)
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="shops[]" value="{{ $shop->id }}" id="shop-{{ $shop->id }}"
+                                   {{ in_array($shop->id, old('shops', $user->exists ? $user->shops->pluck('id')->all() : [\App\Models\Shop::main()->id])) ? 'checked' : '' }}>
+                            <label class="form-check-label small" for="shop-{{ $shop->id }}">{{ $shop->name }} <span class="text-muted">{{ $shop->code }}</span></label>
+                        </div>
+                    @empty
+                        <span class="text-muted small">No shops exist yet.</span>
+                    @endforelse
+                </div>
+                <div class="form-text">Controls which shop's products, stock and sales this account sees. Superadmins see everything regardless.</div>
+            </div>
         </div>
         <div class="card-footer d-flex justify-content-end gap-2">
             <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">Cancel</a>
