@@ -7,7 +7,7 @@
     <meta name="user-email" content="{{ auth()->user()->email ?? '' }}">
     <meta name="authed" content="{{ auth()->check() ? '1' : '0' }}">
     <title>{{ store_info()['name'] }} — Zion POS</title>
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="/manifest.webmanifest?v=2">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="/css/app.css?v={{ time() }}">
@@ -132,8 +132,8 @@
                     @yield('page_title')
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center gap-2">
+            <div class="topbar-right d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 topbar-nav">
                     <button type="button" class="nav-round-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='{{ url('/') }}'" title="Back" aria-label="Go back">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                     </button>
@@ -144,7 +144,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
                     </a>
                 </div>
-                @yield('page_actions')
+                <div class="topbar-actions d-flex align-items-center gap-2">@yield('page_actions')</div>
                 @php($switchShops = auth()->user()->hasRole('superadmin')
                     ? \App\Models\Shop::query()->ordered()->get()
                     : auth()->user()->shops()->where('is_active', true)->orderBy('id')->get())

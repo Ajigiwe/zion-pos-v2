@@ -63,7 +63,7 @@
                         </td>
                         <td><span class="pill">{{ $label }}</span></td>
                         <td class="text-end fw-bold small text-nowrap {{ $inc ? 'text-success' : 'text-danger' }}">{{ $inc ? '+' : '−' }}{{ rtrim(rtrim((string) abs((float) $movement->quantity), '0'), '.') }}</td>
-                        <td class="small text-muted text-nowrap">{{ $movement->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="small text-muted">{{ $movement->created_at->format('Y-m-d H:i') }}</td>
                         <td class="small text-muted text-break">{{ $movement->reason ?? '—' }}</td>
                     </tr>
                 @empty
