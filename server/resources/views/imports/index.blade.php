@@ -68,6 +68,18 @@
         </form>
         <div id="imp-preview" class="mt-3"></div>
         <div id="imp-errors" class="alert alert-warning small mt-2 d-none" style="max-height:220px;overflow:auto;"><b>Issues found:</b><ul id="imp-error-list" class="mb-0 ms-3"></ul></div>
+        @if (session('import_errors'))
+            <div class="alert alert-warning small mt-2" style="max-height:220px;overflow:auto;">
+                <b>{{ count(session('import_errors')) }} failing rows</b> — reasons from the last Apply
+                @if (session('import_error_count') > count(session('import_errors'))) (showing first {{ count(session('import_errors')) }} of {{ session('import_error_count') }}) @endif
+                :
+                <ul class="mb-0 ms-3">
+                    @foreach (session('import_errors') as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </div>
 
     <div class="card feature-card">

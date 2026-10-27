@@ -186,6 +186,17 @@ class ImportService
             return 'SKU-' . str_pad((string) $nextSku++, 6, '0', STR_PAD_LEFT);
         };
 
+        // count barcode occurrences inside the sheet (for the duplicate trap)
+        $bcCount = [];
+        if ($kind === 'products') {
+            foreach ($rows->values() as $r) {
+                $b = trim((string) $r->get(1));
+                if ($b !== '' && ! preg_match('/^[\d.]+[eE]\+?\d{1,3}$/', $b)) {
+                    $bcCount[$b] = ($bcCount[$b] ?? 0) + 1;
+                }
+            }
+        }
+
         foreach ($rows->values() as $i => $row) {
             $line = $i + 2;
             $sku = trim((string) $row->get(0));
@@ -202,6 +213,21 @@ class ImportService
             ];
 
             if ($kind === 'products') {
+                // spreadsheet traps: a value like 4.01712E+12 is a float-printed
+                // barcode (Excel coercion) — never a real code; and the same
+                // barcode twice in one sheet would otherwise import once and
+                // explode the rest on the unique index. Both get cleared so
+                // the row imports barcode-less and the operator sees why.
+                $barcode = trim((string) $row->get(1));
+                $notes = [];
+                if ($barcode !== ''
+                    && preg_match('/^[\d.]+[eE]\+?\d{1,3}$/', $barcode)) {
+                    $barcode = '';
+                    $notes[] = 'scientific-notation barcode cleared';
+                } elseif ($barcode !== '' && ($bcCount[$barcode] ?? 0) > 1) {
+                    $barcode = '';
+                    $notes[] = 'duplicate barcode in sheet — cleared';
+                }
                 $name = trim((string) $row->get(2));
                 if ($sku === '' && $name !== '') {
                     // operator gave no SKU for a named item - mint one so the row is usable
@@ -210,8 +236,11 @@ class ImportService
                     $product = null;
                     $draft['exists'] = false;
                 }
+                if ($notes) {
+                    $draft['info'] = trim($draft['info'].' · '.implode(' · ', $notes), ' ·');
+                }
                 $draft += [
-                    'barcode' => $this->nullIfBlank($row->get(1)) ?? '',
+                    'barcode' => $barcode,
                     'name' => $name,
                     'category' => trim((string) $row->get(3)),
                     'brand' => trim((string) $row->get(4)),
@@ -332,6 +361,7 @@ class ImportService
         AuditLog::record('IMPORT', auth()->id(), 'import_batch', $batch->id, sprintf('%s · %s · %d ok, %d failed', $batch->batch_number, $type, $ok, $failed));
 
         session()->flash('import_errors', array_slice($errors, 0, 25));
+        session()->flash('import_error_count', count($errors));
 
         return $batch;
     }
