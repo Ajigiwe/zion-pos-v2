@@ -218,6 +218,36 @@
     </div>
 </div>
 
+@if (auth()->check())
+{{-- Phone bottom nav: 4 app-style shortcuts. Hidden on tablets/desktop. --}}
+<nav class="mobile-tabbar" aria-label="Main">
+    @can('dashboard.view')
+        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            <span>Home</span>
+        </a>
+    @endcan
+    @can('products.view')
+        <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*', 'taxonomy.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m20.6 13.4-7.2 4.2a2 2 0 0 1-2 0l-7.2-4.2"/><path d="m3.4 7.9 7.8-4.5a2 2 0 0 1 1.6 0l7.8 4.5v8.2l-7.8 4.5a2 2 0 0 1-1.6 0L3.4 16.1z"/></svg>
+            <span>Products</span>
+        </a>
+    @endcan
+    @can('inventory.view')
+        <a href="{{ route('inventory.index') }}" class="{{ request()->routeIs('inventory.*') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v13h18V7"/><path d="M1 3h22v4H1z"/><path d="M10 12h4"/></svg>
+            <span>Stock</span>
+        </a>
+    @endcan
+    @can('pos.view')
+        <a href="{{ route('sales.index') }}" class="{{ request()->routeIs('sales.*', 'receipts.*', 'pos.detail') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1.5L8 22l2-1.5L12 22l2-1.5L16 22l2-1.5 2 1.5V2h-2v3H6V2z"/><path d="M8 10h8M8 14h5"/></svg>
+            <span>Sales</span>
+        </a>
+    @endcan
+</nav>
+@endif
+
 {{-- change password (topbar dropdown) --}}
 <div class="modal fade" id="pwModal" tabindex="-1">
     <div class="modal-dialog modal-sm">

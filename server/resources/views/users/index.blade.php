@@ -25,7 +25,18 @@
                         </div>
                     </td>
                     <td class="text-muted small">{{ $user->email }}</td>
-                    <td><span class="pill {{ $roleKey === 'superadmin' ? 'ok' : '' }}">{{ $user->role_label() }}</span></td>
+                    <td>
+                        <span class="pill {{ $roleKey === 'superadmin' ? 'ok' : '' }}">{{ $user->role_label() }}</span>
+                        <div class="small text-muted mt-1">
+                            @if ($user->hasRole('superadmin'))
+                                all shops
+                            @elseif ($user->shops->isNotEmpty())
+                                {{ $user->shops->pluck('code')->implode(' · ') }}
+                            @else
+                                no shop yet
+                            @endif
+                        </div>
+                    </td>
                     <td>
                         <form method="POST" action="{{ route('users.toggle', $user) }}">
                             @csrf

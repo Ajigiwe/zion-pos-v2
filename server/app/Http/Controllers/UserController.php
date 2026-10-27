@@ -37,7 +37,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::query()->with('roles:id,name')->orderBy('name')->get();
+        $users = User::query()->with(['roles:id,name', 'shops:id,code,name'])->orderBy('name')->get();
 
         return view('users.index', [
             'users' => $users,

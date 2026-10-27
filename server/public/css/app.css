@@ -708,36 +708,101 @@ nav[role="navigation"] svg,
 }
 
 /* ============================================================
-   Phone topbar: row 1 = hamburger + title + nav trio + shop/user
-                 row 2 = page actions as an edge-to-edge scroll strip
+   Phone topbar: row 1 = hamburger + title (+ date)
+                  row 2 = shop switcher + user menu (roomy, easy switch)
+                  row 3 = page action chips, WRAPPED (no side-scroll strip)
    ============================================================ */
 @media (max-width: 767.98px) {
     .topbar {
         flex-wrap: wrap;
-        gap: .4rem .6rem;
+        gap: .4rem .5rem;
+        padding-left: .8rem !important;
+        padding-right: .8rem !important;
     }
-    /* lift the right group's children into the topbar flow */
-    .topbar-right { display: contents; }
+    /* lift the right group's children into the topbar flow.
+       !important is required: Bootstrap's .d-flex utility is !important itself. */
+    .topbar-right { display: contents !important; }
+    /* back/collapse/home trio is dead weight on phones — the bottom
+       tab bar covers navigation (Home = dashboard) */
+    .topbar-nav { display: none !important; }
+    .topbar .topbar-right > div.dropdown { order: 5; min-width: 0; margin: 0 !important; }
+    .topbar .topbar-right > div.dropdown .dropdown-toggle { max-width: 44vw; }
     .topbar-actions {
         order: 10;
         flex: 1 1 100%;
-        flex-wrap: nowrap !important;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scrollbar-width: none;            /* horizontally scrollable, bar hidden — swipe the chips */
+        flex-wrap: wrap !important;
         padding: 2px 1px;
         min-width: 0;
+        row-gap: .35rem;
     }
-    .topbar-actions::-webkit-scrollbar { display: none; }
-    .topbar-actions > * { flex: 0 0 auto; }
     .topbar-actions .btn-sm {
         white-space: nowrap;
         padding-left: .6rem;
         padding-right: .6rem;
     }
-    /* the collapse round button is dead weight on phones (drawer hamburger exists) */
-    #topbar-collapse { display: none; }
-    .topbar-nav { gap: .35rem !important; }
+    .topbar-title small { font-size: .7rem; }
+}
+
+/* ============================================================
+   Phone bottom tab bar — 4 app-style shortcuts
+   (Home · Products · Stock · Sales history), fixed above any
+   browser chrome, safe-area aware, hidden on tablets/desktop.
+   ============================================================ */
+.mobile-tabbar { display: none; }
+@media (max-width: 767.98px) {
+    .mobile-tabbar {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 1040;
+        gap: .1rem;
+        padding: .3rem .6rem calc(.3rem + env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--card) 88%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-top: 1px solid var(--hairline);
+    }
+    .mobile-tabbar a {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: .36rem .2rem;
+        border-radius: .6rem;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: .64rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: .01em;
+    }
+    .mobile-tabbar a svg { width: 21px; height: 21px; flex: 0 0 auto; }
+    .mobile-tabbar a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-tabbar a.active {
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 11%, transparent);
+    }
+    /* keep page content clear of the bar */
+    .main main { padding-bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px)) !important; }
+    /* the install pill would sit under the tab bar — lift it */
+    #pwa-install { bottom: calc(4.8rem + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Stat cards: one consistent size on phones — same font clamp, one line,
+   matching paddings, so the row reads as tiles instead of ragged stacks */
+@media (max-width: 575.98px) {
+    .stat-card { padding: .8rem !important; border-radius: .8rem; }
+    .stat-card .stat-label { font-size: .62rem; margin-bottom: .15rem; }
+    .stat-value, .stat-card.hero .stat-value {
+        font-size: 1.25rem !important;
+        line-height: 1.25 !important;
+        white-space: nowrap;
+    }
+    .stat-card .stat-sub, .hero-sub { font-size: .68rem; }
+    .icon-chip { width: 26px; height: 26px; }
+    .icon-chip svg { width: 14px; height: 14px; }
 }
 
 /* Stat cards: big money values shrink to fit instead of overflowing col-6 cards */
