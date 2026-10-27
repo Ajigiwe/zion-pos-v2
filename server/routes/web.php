@@ -112,6 +112,8 @@ Route::middleware('auth')->group(function () {
     Route::post('settings/restore', [SettingController::class, 'restore'])->middleware('permission:settings.manage')->name('settings.restore');
     Route::post('settings/wipe', [SettingController::class, 'wipe'])->middleware('permission:settings.manage')->name('settings.wipe');
     Route::post('settings/wipe-shop', [SettingController::class, 'wipeShop'])->middleware('role:superadmin')->name('settings.wipeShop');
+    Route::post('settings/shop-backup', [SettingController::class, 'shopBackup'])->middleware('role:superadmin')->name('settings.shopBackup');
+    Route::post('settings/shop-restore', [SettingController::class, 'shopRestore'])->middleware('role:superadmin')->name('settings.shopRestore');
 
     // Own account — every signed-in user can change their own password
     Route::put('account/password', [SettingController::class, 'changePassword'])->name('account.password');

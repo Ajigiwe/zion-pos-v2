@@ -243,6 +243,40 @@ class SettingController extends Controller
         return back()->with('error', 'Wipe failed: '.$result['error']);
     }
 
+    /** Per-shop backup: data-only .sql of one shop's rows (audit/ledger history preserved). */
+    public function shopBackup(Request $request)
+    {
+        $data = $request->validate(['shop_id' => ['required', 'integer']]);
+
+        $shop = \App\Models\Shop::find($data['shop_id']);
+        abort_unless($shop, 404);
+
+        $result = $this->backups->createShop($shop);
+
+        if ($result['ok']) {
+            AuditLog::record('SHOP_BACKUP', auth()->id(), 'shop', $shop->id, "Shop '{$shop->name}' backed up: ".basename($result['file']));
+
+            return back()->with('success', "Backup of '{$shop->name}' created: ".basename($result['file']));
+        }
+
+        return back()->with('error', 'Shop backup failed: '.$result['error']);
+    }
+
+    /** Per-shop restore: target shop comes from the file header; full safety backup runs first. */
+    public function shopRestore(Request $request)
+    {
+        $result = $this->backups->restoreShop($request->file('sql'));
+
+        if ($result['ok']) {
+            AuditLog::record('SHOP_RESTORE', auth()->id(), 'shop', $result['shop']->id,
+                "Shop '{$result['shop']->name}' restored from per-shop backup (safety backup: {$result['safety']})");
+
+            return back()->with('success', "'{$result['shop']->name}' restored. Full safety backup saved as {$result['safety']}.");
+        }
+
+        return back()->with('error', 'Shop restore failed: '.$result['error']);
+    }
+
     public function backup(Request $request)
     {
         $result = $this->backups->create();

@@ -366,6 +366,22 @@
                         <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#wipeShopModal">Wipe one shop…</button>
                     @endrole
                 </div>
+                @role('superadmin')
+                    <div class="border-top pt-2 mt-2">
+                        <div class="fw-bold small" style="letter-spacing:.5px;color:var(--muted);">PER-SHOP</div>
+                        <div class="text-muted" style="font-size:.75rem;">Backup or restore a single shop's data. Wipe already works per shop.</div>
+                        <form method="POST" action="{{ route('settings.shopBackup') }}" class="d-flex gap-2 mt-2 align-items-center">
+                            @csrf
+                            <select name="shop_id" class="form-select form-select-sm" style="max-width:220px;">
+                                @foreach(\App\Models\Shop::query()->ordered()->get() as $s)
+                                    <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->code }})</option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-sm btn-accent text-nowrap">Export shop backup…</button>
+                        </form>
+                        <button class="btn btn-sm btn-outline-accent mt-2" data-bs-toggle="modal" data-bs-target="#shopRestoreModal">Restore one shop…</button>
+                    </div>
+                @endrole
                 <div class="table-responsive">
                 <table class="table table-sm small mb-0">
                     <thead><tr><th>File</th><th class="text-end">Size</th><th class="text-end">When</th><th></th></tr></thead>
@@ -587,6 +603,25 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button class="btn btn-danger">Backup &amp; Wipe This Shop</button>
+            </div>
+        </div>
+    </form></div>
+</div>
+
+{{-- Restore ONE shop modal (superadmin, multi-shop) — the file's header names its shop --}}
+<div class="modal fade" id="shopRestoreModal" tabindex="-1">
+    <div class="modal-dialog"><form method="POST" action="{{ route('settings.shopRestore') }}" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-content">
+            <div class="modal-header"><h6 class="modal-title">Restore one shop's data</h6></div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Upload a <strong>per-shop backup</strong> (.sql exported by the button above &mdash; the file itself knows which shop it belongs to). The shop's current products, stock, sales, refunds and imports are replaced with the backup's contents; everything else (users, settings, other shops, audit trail) is untouched.</div>
+                <div class="alert alert-warning small">A FULL database backup is written automatically before anything is changed.</div>
+                <input type="file" name="sql" accept=".sql" class="form-control form-control-sm" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-accent">Backup safety copy &amp; Restore shop</button>
             </div>
         </div>
     </form></div>
