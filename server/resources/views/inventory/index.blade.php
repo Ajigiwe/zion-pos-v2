@@ -5,7 +5,7 @@
 @endsection
 
 @section('page_actions')
-<div class="d-flex gap-2">
+<div class="d-flex gap-2 flex-wrap">
     @can('inventory.adjust')<a href="{{ route('inventory.opening') }}" class="btn btn-sm btn-outline-accent">Opening stock…</a>@endcan
     @can('inventory.adjust')<button class="btn btn-sm btn-accent" data-bs-toggle="modal" data-bs-target="#invModal"
         data-btn="purchase">Add stock</button>@endcan
@@ -21,7 +21,7 @@
 {{-- movement form (mode=add|adjust|damage) --}}
 <div class="mb-3">
     <form method="GET" class="row g-2 align-items-end">
-        <div class="col-md-3">
+        <div class="col-12 col-md-3">
             <label class="form-label small text-muted" style="letter-spacing:.5px;">MOVEMENT TYPE</label>
             <select name="type" class="form-select form-select-sm">
                 <option value="">All types</option>
@@ -30,15 +30,15 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-md-3">
             <label class="form-label small text-muted" style="letter-spacing:.5px;">SEARCH PRODUCT</label>
             <div class="input-group input-group-sm">
                 <input name="search" class="form-control" placeholder="Search by product name, SKU or barcode…" value="{{ $filter['search'] ?? '' }}">
             </div>
         </div>
-        <div class="col-md-2"><input name="from" type="date" class="form-control form-control-sm" value="{{ $filter['from'] ?? '' }}" title="From"></div>
-        <div class="col-md-2"><input name="to" type="date" class="form-control form-control-sm" value="{{ $filter['to'] ?? '' }}" title="To"></div>
-        <div class="col-md-2 d-flex gap-2">
+        <div class="col-6 col-md-2"><input name="from" type="date" class="form-control form-control-sm" value="{{ $filter['from'] ?? '' }}" title="From"></div>
+        <div class="col-6 col-md-2"><input name="to" type="date" class="form-control form-control-sm" value="{{ $filter['to'] ?? '' }}" title="To"></div>
+        <div class="col-12 col-md-2 d-flex gap-2">
             <button class="btn btn-sm btn-outline-secondary flex-fill">Filter</button>
             <a href="{{ route('inventory.index') }}" class="btn btn-sm btn-outline-secondary" title="Clear">✖</a>
         </div>
@@ -59,12 +59,12 @@
                     <tr>
                         <td class="d-flex align-items-center gap-2">
                             <span class="icon-chip" style="width:28px;height:28px;flex-basis:28px;background:{{ $inc ? 'color-mix(in srgb, var(--accent) 14%, transparent)' : 'rgba(220,38,38,.12)' }};color:{{ $inc ? 'var(--accent)' : '#DC2626' }};">{{ $inc ? '⤦' : '⤴' }}</span>
-                            <span class="small fw-semibold">{{ $movement->product?->name }}</span>
+                            <span class="small fw-semibold text-break">{{ $movement->product?->name }}</span>
                         </td>
                         <td><span class="pill">{{ $label }}</span></td>
-                        <td class="text-end fw-bold small {{ $inc ? 'text-success' : 'text-danger' }}">{{ $inc ? '+' : '−' }}{{ rtrim(rtrim((string) abs((float) $movement->quantity), '0'), '.') }}</td>
-                        <td class="small text-muted">{{ $movement->created_at->format('Y-m-d H:i') }}</td>
-                        <td class="small text-muted">{{ $movement->reason ?? '—' }}</td>
+                        <td class="text-end fw-bold small text-nowrap {{ $inc ? 'text-success' : 'text-danger' }}">{{ $inc ? '+' : '−' }}{{ rtrim(rtrim((string) abs((float) $movement->quantity), '0'), '.') }}</td>
+                        <td class="small text-muted text-nowrap">{{ $movement->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="small text-muted text-break">{{ $movement->reason ?? '—' }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="5" class="text-center py-4">
@@ -90,7 +90,6 @@
                 <div class="modal-body">
                     <label class="form-label small" id="inv-product-label">Product *</label>
                     <input type="hidden" name="product_id" id="inv-product" value="">
-                    <label class="form-label small" id="inv-product-label">Product *</label>
                     <div class="position-relative">
                         <input type="text" id="inv-product-search" class="form-control form-control-sm" placeholder="Search by name or SKU…" autocomplete="off" spellcheck="false" required style="color:var(--text);">
                         <div id="inv-product-list" class="list-group position-absolute w-100 d-none shadow-sm" style="max-height:240px;overflow-y:auto;z-index:1055;"></div>

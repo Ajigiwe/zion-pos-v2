@@ -1,14 +1,24 @@
 @extends('layouts.app')
 
 @section('page_title')
-    <h5 class="mb-0 d-inline">Dashboard</h5><small class="text-muted ms-1">{{ $day->format('d ') }}{{ $day->translatedFormat('F') }} {{ $day->format('Y') }}</small>
+    <h5 class="mb-0 d-inline">Dashboard</h5><small class="text-muted ms-1">{{ $rangeLabel }} · {{ $day->format('d ') }}{{ $day->translatedFormat('F') }} {{ $day->format('Y') }}</small>
 @endsection
 
 @section('page_actions')
-<a href="{{ url()->current() }}" class="btn btn-sm btn-outline-accent d-inline-flex align-items-center gap-1">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-    Refresh
-</a>
+<div class="d-flex gap-2 flex-wrap">
+    <div class="d-flex gap-1" role="group" id="dash-range">
+        <input type="radio" class="btn-check" name="dash-range" id="dg-today" value="today" {{ $rangeKey === 'today' ? 'checked' : '' }}>
+        <label class="btn btn-sm btn-outline-accent" for="dg-today">Today</label>
+        <input type="radio" class="btn-check" name="dash-range" id="dg-7" value="7" {{ $rangeKey === '7' ? 'checked' : '' }}>
+        <label class="btn btn-sm btn-outline-accent" for="dg-7">7 days</label>
+        <input type="radio" class="btn-check" name="dash-range" id="dg-30" value="30" {{ $rangeKey === '30' ? 'checked' : '' }}>
+        <label class="btn btn-sm btn-outline-accent" for="dg-30">30 days</label>
+    </div>
+    <a href="{{ url()->current() }}@if($rangeKey !== 'today')?range={{ $rangeKey }}@endif" class="btn btn-sm btn-outline-accent d-inline-flex align-items-center gap-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Refresh
+    </a>
+</div>
 @endsection
 
 @section('content')
@@ -18,7 +28,7 @@
         <div class="card stat-card hero p-3 h-100">
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div class="min-w-0">
-                    <div class="stat-label">Today's takings</div>
+                    <div class="stat-label">Takings · {{ $rangeLabel }}</div>
                     <div class="stat-value">{{ money($takings) }}</div>
                     <div class="hero-sub">Cash + Mobile Money · after refunds</div>
                 </div>
@@ -33,9 +43,9 @@
         <div class="card feature-card stat-card p-3 h-100">
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div class="min-w-0">
-                    <div class="stat-label">Cash</div>
+                    <div class="stat-label">Cash · {{ $rangeLabel }}</div>
                     <div class="stat-value">{{ money($cash) }}</div>
-                    <div class="text-muted stat-sub">{{ $cashCount }} payment{{ $cashCount === 1 ? '' : 's' }} today</div>
+                    <div class="text-muted stat-sub">{{ $cashCount }} payment{{ $cashCount === 1 ? '' : 's' }}</div>
                 </div>
                 <span class="icon-chip" style="background:color-mix(in srgb, #0284C7 12%, transparent);color:#0284C7;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h-.01"/></svg>
@@ -50,7 +60,7 @@
                 <div class="min-w-0">
                     <div class="stat-label">Mobile Money</div>
                     <div class="stat-value">{{ money($momo) }}</div>
-                    <div class="text-muted stat-sub">{{ $momoCount }} payment{{ $momoCount === 1 ? '' : 's' }} today</div>
+                    <div class="text-muted stat-sub">{{ $momoCount }} payment{{ $momoCount === 1 ? '' : 's' }}</div>
                 </div>
                 <span class="icon-chip" style="background:color-mix(in srgb, #0D9488 12%, transparent);color:#0D9488;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>
@@ -63,7 +73,7 @@
         <div class="card feature-card stat-card p-3 h-100">
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div class="min-w-0">
-                    <div class="stat-label">Refunds today</div>
+                    <div class="stat-label">Refunds · {{ $rangeLabel }}</div>
                     <div class="stat-value {{ $refundsCount > 0 ? 'text-danger' : '' }}">{{ money($refundsCount ? $cashRefunded + $momoRefunded : 0) }}</div>
                     <div class="text-muted stat-sub">{{ $refundsCount }} refund{{ $refundsCount === 1 ? '' : 's' }} total</div>
                 </div>
@@ -80,8 +90,8 @@
 </div>
 
 <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
-    <div class="d-flex align-items-center gap-2">
-        <span class="section-title">Sales today</span>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="section-title">Sales · {{ $rangeLabel }}</span>
         <span class="pill ok">{{ $salesCount }} completed</span>
     </div>
 </div>
@@ -239,6 +249,17 @@
 </div>
 
 @push('scripts')
+<script>
+/* Dashboard range filter — switching chips reloads with ?range= */
+document.querySelectorAll('#dash-range input[name="dash-range"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        const v = this.value;
+        const url = new URL(window.location.href);
+        if (v === 'today') { url.searchParams.delete('range'); } else { url.searchParams.set('range', v); }
+        window.location.href = url.toString();
+    });
+});
+</script>
 <script>
 (function() {
     let currentProduct = null;

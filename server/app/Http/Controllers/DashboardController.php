@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /** Ranges the dashboard filter offers (mirrors Reports). */
+    private const RANGES = [
+        'today' => [0, 'Today'],
+        '7' => [6, 'Last 7 days'],
+        '30' => [29, 'Last 30 days'],
+    ];
+
     public function __invoke(\Illuminate\Http\Request $request)
     {
         $user = $request->user();
@@ -20,12 +27,17 @@ class DashboardController extends Controller
             return redirect()->route('pos');
         }
 
-        $today = Carbon::today();
-        $end = $today->copy()->endOfDay();
+        $key = $request->input('range');
+        if (! is_string($key) || ! array_key_exists($key, self::RANGES)) {
+            $key = 'today';
+        }
+        [$daysBack, $label] = self::RANGES[$key];
 
-        // Completed sales today (gross + paid split by method).
+        $today = Carbon::today();
+        $start = $today->copy()->subDays($daysBack)->startOfDay();
+        $end = $today->copy()->endOfDay();
         $sales = Sale::query()->where('sale_status', 'COMPLETED')
-            ->whereBetween('created_at', [$today->startOfDay(), $end])
+            ->whereBetween('created_at', [$start, $end])
             ->with('payments')->get();
 
         $gross = (float) $sales->sum('subtotal');
@@ -40,9 +52,9 @@ class DashboardController extends Controller
             }
         }
 
-        // Refunds TODAY (approved), split by method.
+        // Refunds in the same period (approved), split by method.
         $refunds = Refund::query()->where('status', 'APPROVED')
-            ->whereBetween('created_at', [$today->startOfDay(), $end])
+            ->whereBetween('created_at', [$start, $end])
             ->get(['refund_method', 'amount']);
 
         $refundedByMethod = [];
@@ -77,6 +89,8 @@ class DashboardController extends Controller
 
         return view('dashboard.index', [
             'day' => $today,
+            'rangeKey' => $key,
+            'rangeLabel' => $label,
             'gross' => $gross,
             'discounts' => $discounts,
             'salesCount' => $sales->count(),

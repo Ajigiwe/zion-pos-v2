@@ -3,8 +3,8 @@
 @section('page_title', 'Reports')
 
 @section('page_actions')
-<div class="d-flex gap-2">
-    <div class="d-flex gap-1" role="group">
+<div class="d-flex gap-2 flex-wrap">
+    <div class="d-flex gap-1 flex-wrap" role="group">
         <input type="radio" class="btn-check" name="rep-range" id="rg-today" value="today" {{ $key === 'today' ? 'checked' : '' }}>
         <label class="btn btn-sm btn-outline-accent" for="rg-today">Today</label>
         <input type="radio" class="btn-check" name="rep-range" id="rg-7" value="7" {{ $key === '7' ? 'checked' : '' }}>
@@ -29,28 +29,28 @@
 @else
     {{-- summary cards --}}
     <div class="row g-3 mb-3">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card feature-card stat-card p-3 h-100">
                 <div class="stat-label">Total sales</div>
                 <div class="stat-value">{{ money($gross) }}</div>
                 <div class="text-muted small">{{ $salesCount }} sale(s)</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card feature-card stat-card p-3 h-100">
                 <div class="stat-label">Discounts</div>
                 <div class="stat-value">{{ money($discounts) }}</div>
                 <div class="text-muted small">given at the till</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card feature-card stat-card p-3 h-100">
                 <div class="stat-label">Refunds</div>
                 <div class="stat-value {{ $refundTotal > 0.001 ? 'text-danger' : '' }}">{{ money($refundTotal) }}</div>
                 <div class="text-muted small">{{ $refundsCount }} refund(s)</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card feature-card stat-card emphasized p-3 h-100">
                 <div class="stat-label text-accent">Net sales</div>
                 <div class="stat-value">{{ money($net) }}</div>
@@ -127,7 +127,7 @@
                 <div class="card-body p-0">
                     @forelse($topProducts as $p)
                         <table class="table table-sm mb-0"><tbody>
-                        <tr><td class="text-muted">{{ $p['sku'] }}</td><td>{{ $p['name'] }}</td><td class="text-end">{{ rtrim(rtrim(number_format($p['qty'], 3), '0'), '.') }}</td><td class="text-end">{{ money($p['revenue']) }}</td></tr>
+                        <tr><td class="d-none d-md-table-cell text-muted text-nowrap">{{ $p['sku'] }}</td><td class="text-break">{{ $p['name'] }}</td><td class="text-end text-nowrap">{{ rtrim(rtrim(number_format($p['qty'], 3), '0'), '.') }}</td><td class="text-end text-nowrap">{{ money($p['revenue']) }}</td></tr>
                         </tbody></table>
                     @empty
                         <div class="text-muted small text-center py-4">No products sold in this period.</div>
@@ -155,7 +155,7 @@
                 <div class="card-body p-0">
                     @forelse($refundedProducts as $p)
                         <table class="table table-sm mb-0"><tbody>
-                        <tr><td>{{ $p['name'] }}</td><td class="text-end">{{ rtrim(rtrim(number_format($p['qty'], 3), '0'), '.') }}</td><td class="text-end">{{ money($p['amount']) }}</td></tr>
+                        <tr><td class="text-break">{{ $p['name'] }}</td><td class="text-end text-nowrap">{{ rtrim(rtrim(number_format($p['qty'], 3), '0'), '.') }}</td><td class="text-end text-nowrap">{{ money($p['amount']) }}</td></tr>
                         </tbody></table>
                     @empty
                         <div class="text-muted small text-center py-4">No refunded products in this period.</div>
@@ -169,7 +169,7 @@
                 <div class="card-body p-0">
                     @forelse($reasons as $r)
                         <table class="table table-sm mb-0"><tbody>
-                        <tr><td>{{ $r['reason'] }}</td><td class="text-end">{{ $r['count'] }}</td><td class="text-end">{{ money($r['amount']) }}</td></tr>
+                        <tr><td class="text-break">{{ $r['reason'] }}</td><td class="text-end text-nowrap">{{ $r['count'] }}</td><td class="text-end text-nowrap">{{ money($r['amount']) }}</td></tr>
                         </tbody></table>
                     @empty
                         <div class="text-muted small text-center py-4">No refunds in this period.</div>

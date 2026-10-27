@@ -447,7 +447,7 @@ html[data-bs-theme="dark"] .change-box .amount { color: #C8E6C9; }
 .stat-card { border: 0; transition: transform .18s ease, box-shadow .18s ease; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--accent) 40%, transparent); }
 .stat-card .stat-label { text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
-.stat-card .stat-value { font-size: 1.45rem; font-weight: 800; }
+.stat-card .stat-value { font-size: clamp(1rem, 0.85rem + 1.8vw, 1.45rem); font-weight: 800; overflow-wrap: anywhere; line-height: 1.18; }
 .stat-sub, .hero-sub { font-size: .78rem; }
 .stat-card.hero {
     background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)), color-mix(in srgb, var(--accent) 5%, var(--card)));
@@ -693,3 +693,58 @@ nav[role="navigation"] svg,
         background: transparent !important;
     }
 }
+
+/* ============================================================
+   Mobile hardening — no page-level horizontal scroll anywhere,
+   long content wraps instead of being cut off
+   ============================================================ */
+
+/* Phones & tablets: kill sideways drift (modals, wide chips, long names) */
+@media (max-width: 991.98px) {
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+}
+
+/* Stat cards: big money values shrink to fit instead of overflowing col-6 cards */
+.stat-card {
+    min-width: 0;
+}
+
+/* Low-stock & list rows: let names/counts wrap or truncate cleanly instead of pushing wide */
+.list-group-item, .low-stock-row { min-width: 0; }
+.low-stock-row .ls-name, .list-group-item .truncate {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Tables inside cards: wrap long text; scroll stays INSIDE .table-responsive, never the page */
+.table td, .table th { overflow-wrap: break-word; word-break: break-word; }
+.table td:last-child, .table th:last-child { min-width: 0; }
+
+@media (max-width: 575.98px) {
+    /* tighter chrome for dense tables on phones */
+    .table-sm > thead > tr > th, .table-sm > tbody > tr > td { padding: .38rem .5rem; }
+    .table-responsive {
+        margin-bottom: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive::-webkit-scrollbar { height: 6px; }
+    .table-responsive::-webkit-scrollbar-thumb { background: var(--hairline, #ddd); border-radius: 3px; }
+
+    /* pill badges shrink instead of pushing rows wide */
+    .pill { font-size: .68rem; padding: .12rem .45rem; }
+
+    /* topbar: action buttons wrap onto a second row rather than being squeezed off-screen */
+    .topbar { flex-wrap: wrap; }
+    .topbar .page-actions, .topbar [class*="d-flex"] { min-width: 0; }
+}
+
+/* Modals on very small screens: never exceed viewport, inner scroll when tall */
+@media (max-width: 575.98px) {
+    .modal-dialog { max-width: calc(100vw - 1rem); margin: .5rem auto; }
+    .modal-body { max-height: calc(100vh - 12rem); overflow-y: auto; }
+}
+
+/* Forms: inputs never force the page wide */
+.form-control, .form-select { min-width: 0; }
