@@ -147,7 +147,9 @@
                 <div class="topbar-actions d-flex align-items-center gap-2">@yield('page_actions')</div>
                 @php($switchShops = auth()->user()->hasRole('superadmin')
                     ? \App\Models\Shop::query()->ordered()->get()
-                    : auth()->user()->shops()->where('is_active', true)->orderBy('id')->get())
+                    : (auth()->user()->hasRole('admin')
+                        ? \App\Models\Shop::query()->where('is_active', true)->ordered()->get()
+                        : auth()->user()->shops()->where('is_active', true)->orderBy('id')->get()))
                 @if($switchShops->count() > 1)
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" title="Switch shop">

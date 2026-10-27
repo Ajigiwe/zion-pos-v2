@@ -8,7 +8,7 @@
  *  - POST writes are never intercepted: they come from offline.js, which
  *    already queues them in IndexedDB and flushes on reconnect.
  */
-const CACHE = 'zion-pos-v1';
+const CACHE = 'zion-pos-v3';
 const SHELL = '/pos';
 const PRECACHE = [
     SHELL,

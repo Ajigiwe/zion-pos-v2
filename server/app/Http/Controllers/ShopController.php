@@ -80,14 +80,14 @@ class ShopController extends Controller
         return back()->with('success', "{$user->name} ".($data['action'] === 'attach' ? 'assigned to' : 'removed from')." '{$shop->name}'.");
     }
 
-    /** Session switcher — superadmin or staff that belongs to the target shop. */
+    /** Session switcher — superadmin/Owner operate anywhere; other staff must belong to the target shop. */
     public function switchShop(Request $request)
     {
         $data = $request->validate(['shop_id' => ['required', 'integer']]);
         $user = $request->user();
         $shop = Shop::query()->where('is_active', true)->find($data['shop_id']);
 
-        $allowed = $user->hasRole('superadmin')
+        $allowed = $user->hasRole('superadmin') || $user->hasRole('admin')
             || ($shop && $user->shops()->whereKey($shop->id)->exists());
 
         if (! $shop || ! $allowed) {

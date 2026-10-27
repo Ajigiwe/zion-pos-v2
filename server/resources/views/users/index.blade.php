@@ -28,7 +28,7 @@
                     <td>
                         <span class="pill {{ $roleKey === 'superadmin' ? 'ok' : '' }}">{{ $user->role_label() }}</span>
                         <div class="small text-muted mt-1">
-                            @if ($user->hasRole('superadmin'))
+                            @if ($user->hasRole('superadmin') || $user->hasRole('admin'))
                                 all shops
                             @elseif ($user->shops->isNotEmpty())
                                 {{ $user->shops->pluck('code')->implode(' · ') }}

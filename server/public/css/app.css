@@ -699,11 +699,15 @@ nav[role="navigation"] svg,
    long content wraps instead of being cut off
    ============================================================ */
 
-/* Phones & tablets: kill sideways drift (modals, wide chips, long names) */
+/* Phones & tablets: kill sideways drift (modals, wide chips, long names).
+   clip (not hidden): iOS still allows manual/anchored scrolling of
+   overflow:hidden documents — clip genuinely locks the edges. */
 @media (max-width: 991.98px) {
     html, body {
         max-width: 100%;
         overflow-x: hidden;
+        overflow-x: clip;
+        overscroll-behavior-x: none;
     }
 }
 
@@ -757,6 +761,7 @@ nav[role="navigation"] svg,
         z-index: 1040;
         gap: .1rem;
         padding: .3rem .6rem calc(.3rem + env(safe-area-inset-bottom, 0px));
+        background: var(--card);
         background: color-mix(in srgb, var(--card) 88%, transparent);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);

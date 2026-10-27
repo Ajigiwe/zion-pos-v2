@@ -24,8 +24,8 @@ class BootShopContext
             $user = auth()->user();
             $requested = (int) $request->session()->get('shop_id', 0);
 
-            if ($user->hasRole('superadmin')) {
-                // Superadmin operates anywhere; session switcher picks the shop.
+            if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+                // Superadmin + Owner operate anywhere; session switcher picks the shop.
                 $shop = $requested
                     ? Shop::query()->find($requested)
                     : Shop::main();
