@@ -319,6 +319,56 @@
     }
 </script>
 @endauth
+<script>
+/* PWA install: only triggerable now that the manifest carries
+   real 192/512 PNG icons. Chrome hides the native bar, so we
+   capture beforeinstallprompt and surface it as a pill. */
+(function () {
+    let deferred = null;
+    const btn = document.getElementById('pwa-install');
+    if (!btn) return;
+
+    try { if (localStorage.getItem('zion-pwa-dismissed') === '1') return; } catch (e) {}
+
+    function show() { btn.classList.add('pwa-visible'); }
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferred = e;
+        show();
+    });
+
+    // Some Chromium builds fire the prompt before listeners exist — poll briefly.
+    let tries = 0;
+    const probe = setInterval(function () {
+        if (deferred) { clearInterval(probe); return; }
+        if (++tries > 20) clearInterval(probe);
+    }, 500);
+
+    btn.addEventListener('click', function (e) {
+        if (e.target.closest('[data-pwa-dismiss]')) {
+            btn.classList.remove('pwa-visible');
+            try { localStorage.setItem('zion-pwa-dismissed', '1'); } catch (err) {}
+            return;
+        }
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.then(function (choice) {
+            if (choice.outcome === 'accepted') { btn.classList.remove('pwa-visible'); }
+            deferred = null;
+        });
+    });
+
+    window.addEventListener('appinstalled', function () {
+        btn.classList.remove('pwa-visible');
+    });
+})();
+</script>
+<button id="pwa-install" class="pwa-pill" type="button">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <span>Install Zion POS</span>
+    <span class="pwa-x" data-pwa-dismiss aria-label="Dismiss">×</span>
+</button>
 @stack('scripts')
 </body>
 </html>

@@ -5,6 +5,13 @@
 
     RewriteEngine On
 
+    # PWA: make sure the manifest is served with the right MIME on any host
+    <IfModule mod_mime.c>
+        AddType application/manifest+json .webmanifest
+        AddType image/png .png
+        AddType application/javascript .js
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

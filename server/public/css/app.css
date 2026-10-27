@@ -748,3 +748,36 @@ nav[role="navigation"] svg,
 
 /* Forms: inputs never force the page wide */
 .form-control, .form-select { min-width: 0; }
+
+/* --- PWA install pill (appears only when beforeinstallprompt fires) --- */
+.pwa-pill {
+    display: none;
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1090;
+    align-items: center;
+    gap: .5rem;
+    padding: .55rem .95rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--accent, #4f46e5);
+    background: var(--card, #fff);
+    border: 1px solid color-mix(in srgb, var(--accent, #4f46e5) 50%, transparent);
+    border-radius: 999px;
+    box-shadow: 0 10px 26px -8px rgba(15, 23, 42, .45);
+    cursor: pointer;
+}
+.pwa-pill.pwa-visible { display: inline-flex; }
+.pwa-pill .pwa-x {
+    font-size: 1.05rem;
+    line-height: 1;
+    padding: .05rem .15rem .1rem;
+    border-radius: 50%;
+    color: var(--muted, #94a3b8);
+}
+.pwa-pill .pwa-x:hover { background: rgba(148, 163, 184, .18); color: var(--text, #0f172a); }
+@media (max-width: 575.98px) {
+    .pwa-pill { bottom: 12px; }
+}
