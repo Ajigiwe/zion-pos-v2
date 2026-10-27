@@ -74,24 +74,73 @@ class ImportController extends Controller
      */
     public function commit(\Illuminate\Http\Request $request)
     {
-        $data = $request->validate([
-            'kind' => ['required', 'in:products,stock'],
-            'mode' => ['required', 'in:add,set'],
-            'file_name' => ['required', 'string', 'max:255'],
-            'rows' => ['required', 'array', 'max:5000'],
-            'rows.*.include' => ['nullable'],
-            'rows.*.sku' => ['nullable', 'string', 'max:255'],
-            'rows.*.line' => ['nullable', 'string', 'max:10'],
-            'rows.*.name' => ['nullable', 'string', 'max:255'],
-            'rows.*.barcode' => ['nullable', 'string', 'max:64'],
-            'rows.*.category' => ['nullable', 'string', 'max:255'],
-            'rows.*.brand' => ['nullable', 'string', 'max:255'],
-            'rows.*.cost_price' => ['nullable', 'numeric', 'min:0'],
-            'rows.*.selling_price' => ['nullable', 'numeric', 'min:0'],
-            'rows.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'rows.*.reorder_level' => ['nullable', 'numeric', 'min:0'],
-            'rows.*.quantity' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        if ($request->filled('payload')) {
+            // The waiting room submits the whole batch as ONE json variable:
+            // thousands of individual rows[i][field] post variables silently
+            // truncate against hosts' max_input_vars (default 1000, hosts
+            // often 5000) — that is what produced "only 400 went through".
+            $payload = json_decode((string) $request->input('payload'), true);
+            if (! is_array($payload)) {
+                return back()->withErrors(['rows' => 'The staged batch payload was unreadable — press Analyze again and re-apply.']);
+            }
+
+            $kind = $payload['kind'] ?? '';
+            $mode = $payload['mode'] ?? '';
+            $fileName = $payload['file_name'] ?? '';
+            $rowsInput = $payload['rows'] ?? null;
+
+            if (! is_string($kind) || ! in_array($kind, ['products', 'stock'], true)
+                || ! is_string($mode) || ! in_array($mode, ['add', 'set'], true)
+                || ! is_string($fileName) || $fileName === '' || ! is_array($rowsInput)) {
+                return back()->withErrors(['rows' => 'The staged batch was incomplete — press Analyze again and re-apply.']);
+            }
+
+            $data = [
+                'kind' => $kind,
+                'mode' => $mode,
+                'file_name' => mb_substr($fileName, 0, 255),
+                'rows' => [],
+            ];
+
+            foreach ($rowsInput as $r) {
+                if (! is_array($r)) { continue; }
+                $numeric = function ($v) { return is_numeric($v) ? (float) $v : 0; };
+                $str = function ($v, $max) { return is_scalar($v) ? mb_substr(trim((string) $v), 0, $max) : ''; };
+                $data['rows'][] = [
+                    'include' => array_key_exists('include', $r) ? (bool) $r['include'] : false,
+                    'sku' => $str($r['sku'] ?? '', 255),
+                    'line' => $str($r['line'] ?? '', 10),
+                    'name' => $str($r['name'] ?? '', 255),
+                    'barcode' => $str($r['barcode'] ?? '', 64),
+                    'category' => $str($r['category'] ?? '', 255),
+                    'brand' => $str($r['brand'] ?? '', 255),
+                    'cost_price' => max(0, $numeric($r['cost_price'] ?? 0)),
+                    'selling_price' => max(0, $numeric($r['selling_price'] ?? 0)),
+                    'tax_rate' => min(100, max(0, $numeric($r['tax_rate'] ?? 0))),
+                    'reorder_level' => max(0, $numeric($r['reorder_level'] ?? 0)),
+                    'quantity' => max(0, $numeric($r['quantity'] ?? 0)),
+                ];
+            }
+        } else {
+            $data = $request->validate([
+                'kind' => ['required', 'in:products,stock'],
+                'mode' => ['required', 'in:add,set'],
+                'file_name' => ['required', 'string', 'max:255'],
+                'rows' => ['required', 'array', 'max:5000'],
+                'rows.*.include' => ['nullable'],
+                'rows.*.sku' => ['nullable', 'string', 'max:255'],
+                'rows.*.line' => ['nullable', 'string', 'max:10'],
+                'rows.*.name' => ['nullable', 'string', 'max:255'],
+                'rows.*.barcode' => ['nullable', 'string', 'max:64'],
+                'rows.*.category' => ['nullable', 'string', 'max:255'],
+                'rows.*.brand' => ['nullable', 'string', 'max:255'],
+                'rows.*.cost_price' => ['nullable', 'numeric', 'min:0'],
+                'rows.*.selling_price' => ['nullable', 'numeric', 'min:0'],
+                'rows.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'rows.*.reorder_level' => ['nullable', 'numeric', 'min:0'],
+                'rows.*.quantity' => ['nullable', 'numeric', 'min:0'],
+            ]);
+        }
 
         $kind = $data['kind'];
         $kept = [];

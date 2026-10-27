@@ -174,12 +174,38 @@
 
     // The waiting room: apply works from staged rows, so a file is only
     // mandatory when nothing is staged yet
+    function stagedToJson() {
+        const map = new Map();
+        document.querySelectorAll('#imp-preview [name^="rows["]').forEach((inp) => {
+            const m = inp.name.match(/^rows\[(\d+)\]\[(.+)\]$/);
+            if (!m) return;
+            const i = parseInt(m[1], 10), f = m[2];
+            const obj = map.get(i) || {};
+            if (inp.type === 'checkbox') { obj[f] = inp.checked ? 1 : 0; }
+            else { obj[f] = inp.value; }
+            map.set(i, obj);
+        });
+        return Array.from(map.keys()).sort((a, b) => a - b).map((i) => map.get(i));
+    }
+
     form.addEventListener('submit', (e) => {
         if (draft) {
             // the grid lives OUTSIDE the form element (form="imp-form"
             // association), so count across the whole document
             const checked = document.querySelectorAll('#imp-preview input[name$="[include]"]:checked').length;
             if (!checked) { e.preventDefault(); flashWarn('Nothing ticked in the waiting room — pick rows or untick nothing to import at all.', 'warn'); return; }
+
+            // Submit the whole reviewed batch as ONE json variable.
+            // Thousands of separate rows[i][field] post variables silently
+            // truncate against hosts' max_input_vars (observed on prod:
+            // ~400 of 1011 rows lost at the ~5000-var cap).
+            const oldPayload = form.querySelector('input[name="payload"]');
+            if (oldPayload) oldPayload.remove();
+            document.querySelectorAll('#imp-preview [name^="rows["]').forEach((inp) => inp.removeAttribute('form'));
+            const payload = document.createElement('input');
+            payload.type = 'hidden'; payload.name = 'payload';
+            payload.value = JSON.stringify({ kind: el('imp-kind-value').value, mode: el('imp-mode').value, file_name: el('imp-file-name').value, rows: stagedToJson() });
+            form.appendChild(payload);
             return;
         }
         if (!file.files.length) { e.preventDefault(); flashWarn('Choose a file first.', 'warn'); return; }
