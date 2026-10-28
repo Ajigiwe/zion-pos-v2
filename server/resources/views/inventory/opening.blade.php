@@ -31,7 +31,7 @@
                                 <div class="text-muted" style="font-size:.72rem;">{{ $product->sku }}</div>
                             </div>
                             <div class="input-group input-group-sm" style="max-width:140px;">
-                                <input class="form-control text-end" type="number" min="0" step="0.5" name="quantities[{{ $product->id }}]" placeholder="0">
+                                <input class="form-control text-end" type="number" min="0" step="0.001" name="quantities[{{ $product->id }}]" placeholder="0">
                                 <span class="input-group-text">units</span>
                             </div>
                         </div>

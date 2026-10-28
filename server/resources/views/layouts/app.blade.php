@@ -402,5 +402,31 @@
     <span class="pwa-x" data-pwa-dismiss aria-label="Dismiss">×</span>
 </button>
 @stack('scripts')
+<script>
+/* Live filtering: [data-live-search] GET inputs auto-submit while you type
+   (small debounce), [data-live-change] controls submit the moment they change. */
+(function () {
+    const fire = (el) => {
+        const f = el.closest('form');
+        if (!f || (f.method || 'get').toLowerCase() !== 'get') return;
+        f.submit();
+    };
+    let typing = null;
+    document.addEventListener('input', (e) => {
+        const el = e.target.closest('[data-live-search]');
+        if (!el) return;
+        clearTimeout(typing);
+        typing = setTimeout(() => fire(el), 450);
+    });
+    document.addEventListener('keydown', (e) => {
+        const el = e.target.closest('[data-live-search]');
+        if (el && e.key === 'Enter') { e.preventDefault(); clearTimeout(typing); fire(el); }
+    });
+    document.addEventListener('change', (e) => {
+        const el = e.target.closest('[data-live-change]');
+        if (el) { clearTimeout(typing); fire(el); }
+    });
+})();
+</script>
 </body>
 </html>

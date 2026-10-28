@@ -18,18 +18,18 @@
 <form method="GET" class="mb-3">
     <div class="feature-card p-2 d-flex flex-wrap gap-2 align-items-end">
         <div class="d-flex gap-1" role="group">
-            <input type="radio" class="btn-check" name="status" id="st-active" value="active" {{ $status === 'active' ? 'checked' : '' }}>
+            <input type="radio" class="btn-check" name="status" data-live-change id="st-active" value="active" {{ $status === 'active' ? 'checked' : '' }}>
             <label class="btn btn-sm btn-outline-accent" for="st-active">Active</label>
-            <input type="radio" class="btn-check" name="status" id="st-hidden" value="hidden" {{ $status === 'hidden' ? 'checked' : '' }}>
+            <input type="radio" class="btn-check" name="status" data-live-change id="st-hidden" value="hidden" {{ $status === 'hidden' ? 'checked' : '' }}>
             <label class="btn btn-sm btn-outline-accent" for="st-hidden">Hidden <span class="text-muted">({{ $hiddenCount }})</span></label>
-            <input type="radio" class="btn-check" name="status" id="st-all" value="all" {{ $status === 'all' ? 'checked' : '' }}>
+            <input type="radio" class="btn-check" name="status" data-live-change id="st-all" value="all" {{ $status === 'all' ? 'checked' : '' }}>
             <label class="btn btn-sm btn-outline-accent" for="st-all">All</label>
         </div>
         <div class="flex-grow-1" style="min-width:200px;">
-            <input name="q" class="form-control form-control-sm" value="{{ $filters['q'] ?? '' }}" placeholder="Search by product name, SKU or barcode…">
+            <input name="q" data-live-search class="form-control form-control-sm" value="{{ $filters['q'] ?? '' }}" placeholder="Search by product name, SKU or barcode…" autocomplete="off">
         </div>
         <div>
-            <select name="category_id" class="form-select form-select-sm">
+            <select name="category_id" data-live-change class="form-select form-select-sm">
                 <option value="">All categories</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}" {{ ($filters['category_id'] ?? '') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -37,7 +37,7 @@
             </select>
         </div>
         <div class="form-check form-switch mb-1">
-            <input class="form-check-input" type="checkbox" name="low" value="1" id="low-stock" {{ ($filters['low'] ?? '') === '1' ? 'checked' : '' }}>
+            <input class="form-check-input" type="checkbox" name="low" value="1" data-live-change id="low-stock" {{ ($filters['low'] ?? '') === '1' ? 'checked' : '' }}>
             <label class="form-check-label small" for="low-stock">Low stock only</label>
         </div>
         <button class="btn btn-sm btn-accent">Filter</button>

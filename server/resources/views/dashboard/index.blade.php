@@ -209,7 +209,7 @@
                             <label class="form-label small fw-bold mb-0" id="sem-qty-label">Units to add *</label>
                             <span class="small text-muted" id="sem-preview"></span>
                         </div>
-                        <input type="number" step="0.5" min="0.001" name="quantity" id="sem-quantity" class="form-control form-control-lg fw-bold" placeholder="e.g. 10" required autofocus>
+                        <input type="number" step="0.001" min="0.001" name="quantity" id="sem-quantity" class="form-control form-control-lg fw-bold" placeholder="e.g. 10" required autofocus>
                         <div class="form-text small" id="sem-help">Records incoming restock inventory (+quantity).</div>
 
                         {{-- Quick tap buttons for adding --}}

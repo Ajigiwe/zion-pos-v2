@@ -530,7 +530,7 @@
             <div class="modal-header"><h6 class="modal-title">Edit low stock threshold</h6></div>
             <div class="modal-body">
                 <label class="form-label small">Alert at units or fewer</label>
-                <input class="form-control" type="number" step="0.5" min="0" name="threshold" value="{{ $threshold }}" required>
+                <input class="form-control" type="number" step="0.001" min="0" name="threshold" value="{{ $threshold }}" required>
                 <div class="form-text">Applies to products without their own reorder level</div>
             </div>
             <div class="modal-footer">

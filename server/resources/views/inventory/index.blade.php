@@ -23,7 +23,7 @@
     <form method="GET" class="row g-2 align-items-end">
         <div class="col-12 col-md-3">
             <label class="form-label small text-muted" style="letter-spacing:.5px;">MOVEMENT TYPE</label>
-            <select name="type" class="form-select form-select-sm">
+            <select name="type" data-live-change class="form-select form-select-sm">
                 <option value="">All types</option>
                 @foreach($types as $type)
                     <option value="{{ $type->value }}" {{ ($filter['type'] ?? '') === $type->value ? 'selected' : '' }}>{{ $type->label() }}</option>
@@ -33,7 +33,7 @@
         <div class="col-12 col-md-3">
             <label class="form-label small text-muted" style="letter-spacing:.5px;">SEARCH PRODUCT</label>
             <div class="input-group input-group-sm">
-                <input name="search" class="form-control" placeholder="Search by product name, SKU or barcode…" value="{{ $filter['search'] ?? '' }}">
+                <input name="search" data-live-search class="form-control" placeholder="Search by product name, SKU or barcode…" value="{{ $filter['search'] ?? '' }}" autocomplete="off">
             </div>
         </div>
         <div class="col-6 col-md-2"><input name="from" type="date" class="form-control form-control-sm" value="{{ $filter['from'] ?? '' }}" title="From"></div>
@@ -96,7 +96,7 @@
                     </div>
 
                     <label class="form-label small mt-2" id="inv-qty-label">Units received *</label>
-                    <input name="quantity" id="inv-qty" type="number" step="0.5" min="0.001" required class="form-control form-control-sm">
+                    <input name="quantity" id="inv-qty" type="number" step="0.001" min="0.001" required class="form-control form-control-sm">
                     <div class="form-text" id="inv-qty-help">Records a PURCHASE movement (+quantity)</div>
 
                     <label class="form-label small mt-2" id="inv-reason-label">Reason *</label>
