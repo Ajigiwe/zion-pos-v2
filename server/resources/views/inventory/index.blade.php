@@ -59,7 +59,13 @@
                     <tr>
                         <td class="d-flex align-items-center gap-2">
                             <span class="icon-chip" style="width:28px;height:28px;flex-basis:28px;background:{{ $inc ? 'color-mix(in srgb, var(--accent) 14%, transparent)' : 'rgba(220,38,38,.12)' }};color:{{ $inc ? 'var(--accent)' : '#DC2626' }};">{{ $inc ? '⤦' : '⤴' }}</span>
-                            <span class="small fw-semibold text-break">{{ $movement->product?->name }}</span>
+                            @can('inventory.adjust')
+                                <button type="button" class="border-0 bg-transparent p-0 shadow-none d-block text-start" data-open-stock="{{ $movement->product_id }}" title="Adjust stock for this product">
+                                    <span class="small fw-semibold text-break text-decoration-underline text-decoration-opacity-50">{{ $movement->product?->name }}</span>
+                                </button>
+                            @else
+                                <span class="small fw-semibold text-break">{{ $movement->product?->name }}</span>
+                            @endcan
                         </td>
                         <td><span class="pill">{{ $label }}</span></td>
                         <td class="text-end fw-bold small text-nowrap {{ $inc ? 'text-success' : 'text-danger' }}">{{ $inc ? '+' : '−' }}{{ rtrim(rtrim((string) abs((float) $movement->quantity), '0'), '.') }}</td>
@@ -174,10 +180,12 @@ invList.addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
     if (!e.target.closest('#inv-product-search') && !e.target.closest('#inv-product-list')) invList.classList.add('d-none');
 });
-document.querySelectorAll('[data-btn]').forEach((b) => b.addEventListener('click', () => {
-    const mode = INV_MODES[b.dataset.btn];
+document.querySelectorAll('[data-btn]').forEach((b) => b.addEventListener('click', () => setInvMode(b.dataset.btn)));
+
+function setInvMode(btnKey) {
+    const mode = INV_MODES[btnKey];
     document.getElementById('inv-title').textContent = mode.title;
-    document.getElementById('inv-type').value = b.dataset.btn;
+    document.getElementById('inv-type').value = btnKey;
     document.getElementById('inv-direction').value = mode.title === 'Damage / write-off' ? 'out' : 'in';
     document.getElementById('inv-qty-label').textContent = mode.q;
     document.getElementById('inv-qty-help').textContent = mode.qh;
@@ -189,6 +197,16 @@ document.querySelectorAll('[data-btn]').forEach((b) => b.addEventListener('click
     invProduct.value = '';
     invSearch.value = '';
     invList.classList.add('d-none');
+}
+
+// Clicking a product name in the ledger opens the movement modal with the
+// product already chosen (Adjust/switch mode buttons stay available).
+document.querySelectorAll('[data-open-stock]').forEach((b) => b.addEventListener('click', () => {
+    const p = INV_PRODUCTS.find((x) => String(x.id) === b.dataset.openStock);
+    if (!p) return;
+    setInvMode('purchase');
+    invChoose(p);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('invModal')).show();
 }));
 
 // hidden inputs skip native validation - guard the submit ourselves
