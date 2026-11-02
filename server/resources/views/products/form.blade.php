@@ -13,8 +13,16 @@
         @if($product->exists) @method('PUT') @endif
         <div class="card-body row g-3">
             <div class="col-md-4">
-                <label class="form-label small">SKU *</label>
-                <input name="sku" required class="form-control" value="{{ old('sku', $product->sku) }}">
+                <label class="form-label small d-flex justify-content-between">SKU *
+                    @unless($product->exists)
+                        <button type="button" class="btn btn-sm btn-link p-0 text-accent" id="gen-sku">Auto-generate</button>
+                    @endunless
+                </label>
+                <div class="input-group input-group-sm">
+                    <input name="sku" id="sku-input" required readonly class="form-control bg-light font-monospace" value="{{ old('sku', $product->sku) }}" placeholder="Auto-generated…">
+                    <span class="input-group-text bg-light text-muted" title="Auto-generated SKU">🔒</span>
+                </div>
+                <div class="form-text">Auto-generated — not manually typed</div>
             </div>
             <div class="col-md-4">
                 <label class="form-label small d-flex justify-content-between">Barcode *
@@ -36,7 +44,7 @@
             </div>
             <div class="col-md-8">
                 <label class="form-label small">Product name *</label>
-                <input name="name" required class="form-control" value="{{ old('name', $product->name) }}">
+                <input name="name" required class="form-control" value="{{ old('name', $product->name) }}" {{ $product->exists ? '' : 'autofocus' }}>
                 <div class="form-text">Displayed exactly as typed — used for search and receipts</div>
             </div>
             @unless($product->exists)
@@ -129,6 +137,46 @@
 
 @push('scripts')
 <script>
+// Auto-generate SKU
+const genSkuBtn = document.getElementById('gen-sku');
+const skuInput = document.getElementById('sku-input');
+
+async function generateSku() {
+    if (!skuInput) return;
+    if (genSkuBtn) genSkuBtn.disabled = true;
+    try {
+        const res = await fetch("{{ route('products.generate-sku') }}", {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.sku) {
+                skuInput.value = data.sku;
+                skuInput.dispatchEvent(new Event('input', { bubbles: true }));
+                return;
+            }
+        }
+    } catch (err) {
+        console.error('Failed to fetch auto-generated SKU', err);
+    } finally {
+        if (genSkuBtn) genSkuBtn.disabled = false;
+    }
+    // Fallback in case of server/network issue
+    const rand = Math.floor(100000 + Math.random() * 900000);
+    skuInput.value = 'SKU-' + rand;
+    skuInput.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+if (genSkuBtn) {
+    genSkuBtn.addEventListener('click', generateSku);
+}
+
+@unless($product->exists)
+if (skuInput && !skuInput.value.trim()) {
+    generateSku();
+}
+@endunless
+
 // EAN-13 with check digit, 20xx-prefixed like the Flutter generator.
 function ean13generate() {
     let base = '20' + String(Math.floor(Math.random() * 1e9)).padStart(9, '0').slice(0, 9);

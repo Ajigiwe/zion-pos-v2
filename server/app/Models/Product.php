@@ -69,4 +69,34 @@ class Product extends Model
                 ->orWhere('barcode', 'like', "%{$t}%")
         ));
     }
+
+    /**
+     * Auto-generate a unique sequential SKU (e.g. SKU-000001).
+     */
+    public static function generateSku(?int $shopId = null): string
+    {
+        $shopId ??= shop_id();
+        $query = static::withoutGlobalScopes();
+        if ($shopId !== null) {
+            $query->where('shop_id', $shopId);
+        }
+
+        $max = 0;
+        $query->where('sku', 'like', 'SKU-%')->pluck('sku')->each(function ($s) use (&$max) {
+            if (preg_match('/^SKU-(\d+)$/', (string) $s, $m)) {
+                $max = max($max, (int) $m[1]);
+            }
+        });
+
+        $next = $max + 1;
+        do {
+            $sku = 'SKU-'.str_pad((string) $next++, 6, '0', STR_PAD_LEFT);
+            $check = static::withoutGlobalScopes()->where('sku', $sku);
+            if ($shopId !== null) {
+                $check->where('shop_id', $shopId);
+            }
+        } while ($check->exists());
+
+        return $sku;
+    }
 }

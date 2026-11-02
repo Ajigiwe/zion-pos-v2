@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     // Products + taxonomy
     Route::get('products', [ProductController::class, 'index'])->middleware('permission:products.view')->name('products.index');
     Route::middleware('permission:products.manage')->group(function () {
+        Route::get('products/generate-sku', [ProductController::class, 'generateSku'])->name('products.generate-sku');
         Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('products', [ProductController::class, 'store'])->name('products.store');
         Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');

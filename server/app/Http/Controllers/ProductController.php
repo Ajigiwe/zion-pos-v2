@@ -40,10 +40,20 @@ class ProductController extends Controller
         ]);
     }
 
+    public function generateSku(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(['sku' => Product::generateSku()]);
+    }
+
     public function create()
     {
         return view('products.form', [
-            'product' => new Product(['tracking_type' => 'quantity', 'tax_rate' => 0, 'reorder_level' => 0]),
+            'product' => new Product([
+                'sku' => Product::generateSku(),
+                'tracking_type' => 'quantity',
+                'tax_rate' => 0,
+                'reorder_level' => 0,
+            ]),
             'categories' => Category::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
         ]);
@@ -51,6 +61,10 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (! $request->filled('sku')) {
+            $request->merge(['sku' => Product::generateSku()]);
+        }
+
         $data = $this->validated($request);
         $product = Product::create($data + ['is_active' => true]);
 
