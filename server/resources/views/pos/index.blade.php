@@ -73,12 +73,6 @@
 
         <div class="mt-2 pos-summary">
             <div class="rowline"><span>Subtotal</span><span class="amt" id="pos-subtotal">GHS 0.00</span></div>
-            <div class="rowline"><span>Discount</span>
-                <span class="amt input-group input-group-sm" style="max-width:118px;">
-                    <input id="pos-discount" class="form-control text-end" type="number" min="0" step="0.01" value="0">
-                    <span class="input-group-text" id="pos-currency-label">{{ $store['currency'] }}</span>
-                </span>
-            </div>
             <div class="rowline text-muted"><span>VAT (included)</span><span class="amt" id="pos-tax">GHS 0.00</span></div>
             <div class="hero-total d-flex justify-content-between align-items-center my-1" style="padding:.5rem .8rem;">
                 <div class="d-flex align-items-baseline gap-2 min-w-0">

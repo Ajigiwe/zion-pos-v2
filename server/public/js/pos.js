@@ -446,8 +446,6 @@
     function resetSale() {
         cart.length = 0;
         payments.length = 0;
-        discount = 0;
-        $('#pos-discount').value = 0;
         $('#pos-payments').innerHTML = '';
         $('#pos-change-box').classList.add('d-none');
         $('#pos-pay-row').classList.remove('d-none');
@@ -743,7 +741,7 @@
         let posScanTime = 0;
         window.addEventListener('keydown', (e) => {
             const act = document.activeElement;
-            if (act && (act.id === 'pos-pay-amount' || act.id === 'pos-discount' || act.id === 'scan-input')) return;
+            if (act && (act.id === 'pos-pay-amount' || act.id === 'scan-input')) return;
             const now = Date.now();
             const diff = now - posScanTime;
             posScanTime = now;
@@ -773,7 +771,6 @@
             }
         }, true);
 
-        $('#pos-discount').addEventListener('input', (e) => { discount = parseFloat(e.target.value || '0'); renderCart(); });
         $('#pos-pay-add').addEventListener('click', addPayment);
         $('#pos-pay-amount').addEventListener('keydown', (e) => { if (e.key === 'Enter') addPayment(); });
         $('#pos-checkout').addEventListener('click', checkout);
